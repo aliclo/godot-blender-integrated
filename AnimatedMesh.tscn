@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://cp0w48u5trwdx"]
+
+[ext_resource type="PackedScene" uid="uid://bkfr0lyv7b342" path="res://Meshes/Side Tilt Platform Obstacle V2.blend" id="1_d0giq"]
+
+[node name="AnimatedMesh" type="Node3D"]
+
+[node name="Side Tilt Platform Obstacle V2" parent="." instance=ExtResource("1_d0giq")]
