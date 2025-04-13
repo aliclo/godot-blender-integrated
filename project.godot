@@ -20,4 +20,4 @@ project/assembly_name="BlenderImporterPlus"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/BlenderImporterPlus/plugin.cfg")
+enabled=PackedStringArray("res://addons/EditorScenePostImportPlus/plugin.cfg")

@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bkfr0lyv7b342"
-path="res://.godot/imported/Side Tilt Platform Obstacle V2.blend-df419b1a6ad245c1cb1b493468cc9510.scn"
+uid="uid://chnvib76kngpl"
+path="res://.godot/imported/Big Step Platforms.blend-1392d4579fa3c26de37ec6a533eeb51b.scn"
 
 [deps]
 
-source_file="res://Meshes/Side Tilt Platform Obstacle V2.blend"
-dest_files=["res://.godot/imported/Side Tilt Platform Obstacle V2.blend-df419b1a6ad245c1cb1b493468cc9510.scn"]
+source_file="res://Meshes/Big Step Platforms.blend"
+dest_files=["res://.godot/imported/Big Step Platforms.blend-1392d4579fa3c26de37ec6a533eeb51b.scn"]
 
 [params]
 
@@ -30,11 +30,11 @@ animation/fps=30
 animation/trimming=false
 animation/remove_immutable_tracks=true
 animation/import_rest_as_RESET=false
-import_script/path="res://addons/EditorScenePostImportPlus/EditorScenePostImportApplier.cs"
+import_script/path=""
 _subresources={}
-Scripts=[Resource("res://addons/BlenderImporterPlus/BlenderImporterPlusImportPlugin.cs")]
-Scripts=[Resource("res://addons/BlenderImporterPlus/BlenderImporterPlusImportPlugin.cs")]
-Scripts=[Resource("res://addons/BlenderImporterPlus/BlenderImporterPlusImportPlugin.cs")]
+Scripts=[]
+Scripts=[]
+Scripts=[]
 blender/nodes/visible=0
 blender/nodes/active_collection_only=false
 blender/nodes/punctual_lights=true

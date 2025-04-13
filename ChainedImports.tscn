@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://dc20fmc55wsxo"]
+
+[ext_resource type="PackedScene" uid="uid://chnvib76kngpl" path="res://Meshes/Big Step Platforms.blend" id="1_7dxt3"]
+
+[node name="ChainedImports" type="Node3D"]
+
+[node name="Big Step Platforms" parent="." instance=ExtResource("1_7dxt3")]
