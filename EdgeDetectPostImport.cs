@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using static Godot.Mesh;
 
+[Tool]
 public partial class EdgeDetectPostImport : EditorScenePostImportPlus
 {
     
@@ -15,25 +16,25 @@ public partial class EdgeDetectPostImport : EditorScenePostImportPlus
     }
 
     [Export]
-    public float ThicknessX { get; set; } = 0.5f;
+    public double ThicknessX { get; set; } = 0.5f;
 
     [Export]
-    public float ThicknessY { get; set; } = 0.5f;
+    public double ThicknessY { get; set; } = 0.5f;
 
     [Export]
-    public float SharpnessThreshold { get; set; } = 30;
+    public double SharpnessThreshold { get; set; } = 30;
 
     [Export]
-    public float MinYAngle = 0;
+    public double MinYAngle { get; set; } = 0;
 
     [Export]
-    public float MaxYAngle = 360;
+    public double MaxYAngle { get; set; } = 360;
 
     [Export]
-    public float MinY = -1000;
+    public double MinY { get; set; } = -1000;
 
     [Export]
-    public float MaxY = 1000;
+    public double MaxY { get; set; } = 1000;
 
     public override GodotObject _PostImport(GodotObject godotObject)
     {
@@ -232,16 +233,16 @@ public partial class EdgeDetectPostImport : EditorScenePostImportPlus
             return angle > sharpnessThresholdRad && angle < (Math.PI-sharpnessThresholdRad);
         }).ToList();
 
-        var triangleStripMeshes = sharpEdges.Select(sharpEdge => {
+        var edgeMeshsVertices = sharpEdges.Select(sharpEdge => {
             var direction = sharpEdge.StartVertex.DirectionTo(sharpEdge.EndVertex);
             var xRot = Math.Atan2(direction.Y, direction.Z);
             direction = direction.Rotated(new Vector3(1, 0, 0), (float) -xRot);
             var yRot = Math.Atan2(direction.X, direction.Z);
 
-            var topLeft = new Vector3(-1*ThicknessX, -1*ThicknessY, 0).Rotated(new Vector3(0, 1, 0), (float) yRot).Rotated(new Vector3(1, 0, 0), (float) xRot);
-            var topRight = new Vector3(1*ThicknessX, -1*ThicknessY, 0).Rotated(new Vector3(0, 1, 0), (float) yRot).Rotated(new Vector3(1, 0, 0), (float) xRot);
-            var bottomLeft = new Vector3(-1*ThicknessX, 1*ThicknessY, 0).Rotated(new Vector3(0, 1, 0), (float) yRot).Rotated(new Vector3(1, 0, 0), (float) xRot);
-            var bottomRight = new Vector3(1*ThicknessX, 1*ThicknessY, 0).Rotated(new Vector3(0, 1, 0), (float) yRot).Rotated(new Vector3(1, 0, 0), (float) xRot);
+            var topLeft = new Vector3((float) (-1*ThicknessX), (float) (-1*ThicknessY), 0).Rotated(new Vector3(0, 1, 0), (float) yRot).Rotated(new Vector3(1, 0, 0), (float) xRot);
+            var topRight = new Vector3((float) (1*ThicknessX), (float) (-1*ThicknessY), 0).Rotated(new Vector3(0, 1, 0), (float) yRot).Rotated(new Vector3(1, 0, 0), (float) xRot);
+            var bottomLeft = new Vector3((float) (-1*ThicknessX), (float) (1*ThicknessY), 0).Rotated(new Vector3(0, 1, 0), (float) yRot).Rotated(new Vector3(1, 0, 0), (float) xRot);
+            var bottomRight = new Vector3((float) (1*ThicknessX), (float) (1*ThicknessY), 0).Rotated(new Vector3(0, 1, 0), (float) yRot).Rotated(new Vector3(1, 0, 0), (float) xRot);
 
             var vertices = new List<Vector3>
             {
@@ -261,43 +262,75 @@ public partial class EdgeDetectPostImport : EditorScenePostImportPlus
         });
 
 
-        var mesh = new ImmediateMesh();
-        mesh.SurfaceBegin(PrimitiveType.TriangleStrip);
+        var triangleStrips = new List<Vector3>();
 
 
-        var triangleStripMeshesEnumerator = triangleStripMeshes.GetEnumerator();
+        var edgeMeshVerticesEnumerator = edgeMeshsVertices.GetEnumerator();
 
-        triangleStripMeshesEnumerator.MoveNext();
-        var triangleStrips = triangleStripMeshesEnumerator.Current;
-        triangleStripMeshesEnumerator.MoveNext();
-        var nextTriangleStrips = triangleStripMeshesEnumerator.Current;
+        edgeMeshVerticesEnumerator.MoveNext();
+        var edgeMeshVertices = edgeMeshVerticesEnumerator.Current;
+        edgeMeshVerticesEnumerator.MoveNext();
+        var nextEdgeMeshVertex = edgeMeshVerticesEnumerator.Current;
 
-        while(nextTriangleStrips != null) {
-            foreach(var vertex in triangleStrips) {
-                mesh.SurfaceAddVertex(vertex);
-            }
+        while(nextEdgeMeshVertex != null) {
+            triangleStrips.AddRange(edgeMeshVertices);
 
-            var lastVertex = triangleStrips.Last();
-            var nextVertex = nextTriangleStrips.First();
+            var lastVertex = edgeMeshVertices.Last();
+            var nextVertex = nextEdgeMeshVertex.First();
 
-            mesh.SurfaceAddVertex(lastVertex);
-            mesh.SurfaceAddVertex(nextVertex);
+            triangleStrips.Add(lastVertex);
+            triangleStrips.Add(nextVertex);
 
-            triangleStrips = nextTriangleStrips;
-            triangleStripMeshesEnumerator.MoveNext();
-            nextTriangleStrips = triangleStripMeshesEnumerator.Current;
+            edgeMeshVertices = nextEdgeMeshVertex;
+            edgeMeshVerticesEnumerator.MoveNext();
+            nextEdgeMeshVertex = edgeMeshVerticesEnumerator.Current;
         }
 
-        foreach(var vertex in triangleStrips) {
-            mesh.SurfaceAddVertex(vertex);
-        }
+        triangleStrips.AddRange(edgeMeshVertices);
 
-        mesh.SurfaceEnd();
 
+        var vertices = triangleStrips.ToArray();
+
+        // Initialize the ArrayMesh.
+        var arrMesh = new ArrayMesh();
+        Godot.Collections.Array arrays = new Godot.Collections.Array {};
+        arrays.Resize((int)Mesh.ArrayType.Max);
+        arrays[(int)Mesh.ArrayType.Vertex] = vertices;
+
+        // Create the Mesh.
+        arrMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.TriangleStrip, arrays);
         var edgeMeshInstance = new MeshInstance3D();
-        edgeMeshInstance.Mesh = mesh;
+        edgeMeshInstance.Mesh = arrMesh;
+        edgeMeshInstance.Name = "Edges";
+
         node3d.AddChild(edgeMeshInstance);
+        edgeMeshInstance.Owner = node3d;
+
 
         return node3d;
+
+
+        // var immediateMesh = new ImmediateMesh();
+
+        // immediateMesh.SurfaceBegin(PrimitiveType.Triangles);
+
+        // immediateMesh.SurfaceAddVertex(new Vector3(0, 0, 0));
+        // immediateMesh.SurfaceAddVertex(new Vector3(10, 0, 0));
+        // immediateMesh.SurfaceAddVertex(new Vector3(10, 10, 0));
+
+        // immediateMesh.SurfaceEnd();
+
+        // var edgeMeshInstance = new MeshInstance3D();
+        // edgeMeshInstance.Name = "Edges";
+        // edgeMeshInstance.Mesh = immediateMesh;
+        // // node3d.AddChild(edgeMeshInstance);
+        // // edgeMeshInstance.Owner = node3d;
+
+        // foreach(var vertex in edgeMeshInstance.Mesh.GetFaces()) {
+        //     GD.Print(vertex);
+        // }
+
+        // // return node3d;
+        // return edgeMeshInstance;
     }
 }

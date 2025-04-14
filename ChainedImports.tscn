@@ -1,7 +1,23 @@
-[gd_scene load_steps=2 format=3 uid="uid://dc20fmc55wsxo"]
+[gd_scene load_steps=4 format=3 uid="uid://dc20fmc55wsxo"]
 
 [ext_resource type="PackedScene" uid="uid://chnvib76kngpl" path="res://Meshes/Big Step Platforms.blend" id="1_7dxt3"]
+[ext_resource type="Script" path="res://MyMesh.cs" id="2_qd875"]
+
+[sub_resource type="ImmediateMesh" id="ImmediateMesh_whq5x"]
 
 [node name="ChainedImports" type="Node3D"]
 
 [node name="Big Step Platforms" parent="." instance=ExtResource("1_7dxt3")]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 33.0004, 62.8999)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.71883, 0.695186, 0, -0.695186, 0.71883, 0, 98.179, 0)
+
+[node name="MeshCreator" type="Node3D" parent="."]
+script = ExtResource("2_qd875")
+Test = true
+
+[node name="Mesh instance 0" type="MeshInstance3D" parent="MeshCreator"]
+mesh = SubResource("ImmediateMesh_whq5x")

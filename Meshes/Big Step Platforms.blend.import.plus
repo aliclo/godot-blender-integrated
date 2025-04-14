@@ -1,4 +1,13 @@
 [Scripts]
+res://addons/BlenderImporterPlus/BlenderImporterPlusImportPlugin.cs
+res://EdgeDetectPostImport.cs
 
 [Properties]
+EdgeDetectPostImport/ThicknessX=0.5
+EdgeDetectPostImport/ThicknessY=0.25
+EdgeDetectPostImport/SharpnessThreshold=30
+EdgeDetectPostImport/MinYAngle=150
+EdgeDetectPostImport/MaxYAngle=240
+EdgeDetectPostImport/MinY=-10
+EdgeDetectPostImport/MaxY=1000
 
