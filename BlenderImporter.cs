@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -25,7 +26,13 @@ public partial class BlenderImporter : Node
         Rigid
     }
 
-    private PhysicsTypes _physicsType;
+    private class BlendNodes {
+        public MeshInstance3D Mesh { get; set; }
+        public CollisionShape3D CollisionShape { get; set; }
+        public PhysicsBody3D PhysicsBody { get; set; }
+        public AnimationPlayer AnimationPlayer { get; set; }
+    }
+
 
     [Export]
     public PhysicsTypes PhysicsType
@@ -35,7 +42,9 @@ public partial class BlenderImporter : Node
         }
         set {
             _physicsType = value;
-            Reimport();
+            if(_completedFirstImport) {
+                Reimport();
+            }
         }
     }
 
@@ -46,121 +55,268 @@ public partial class BlenderImporter : Node
         }
         set {
             _scene = value;
-            Reimport();
+            if(_completedFirstImport) {
+                Reimport();
+            }
         }
     }
 
     [Export]
     public NodePath MeshLocation {
         get {
-            return _meshLocation;
+            return _mesh?.GetPath();
         }
         set {
-            if(_meshLocation != null && !_meshLocation.IsEmpty) {
-                var location = _meshLocation + "/" + MeshInstance3DPath;
-                if (HasNode(location)) {
-                    Remove(location);
+            if(_mesh != null) {
+                var meshParent = _mesh.GetParent();
+                meshParent.RemoveChild(_mesh);
+                _mesh.QueueFree();
+                orderOfCreation.Remove(_mesh);
+                _mesh = null;
+            }
+
+            BlendNodes blendNodes;
+            try {
+                blendNodes = RetrieveBlendSceneNodes();
+            } catch (InvalidOperationException e) {
+                GD.PrintErr(e.Message);
+                return;
+            }
+
+            var mesh = blendNodes.Mesh;
+
+            if(!value.IsEmpty && mesh != null) {
+                var parentNode = GetNode<Node>(value);
+                parentNode.AddChild(mesh);
+                var owner = GetParent()?.Owner ?? GetParent();
+                mesh.Owner = owner;
+                _mesh = mesh;
+                int indexOfParentNode = orderOfCreation.FindIndex(n => n == parentNode);
+                if(indexOfParentNode == -1) {
+                    orderOfCreation.Add(mesh);
+                } else {
+                    orderOfCreation.Insert(indexOfParentNode+1, mesh);
                 }
             }
-            _meshLocation = value;
-            Reimport();
         }
     }
 
     [Export]
     public NodePath PhysicsBodyLocation {
         get {
-            return _physicsBodyLocation;
+            return _physicsBody?.GetPath();
         }
         set {
-            if(_physicsBodyLocation != null && !_physicsBodyLocation.IsEmpty) {
-                var location = _physicsBodyLocation + "/" + PhysicsBody3DPath;
-                if (HasNode(location)) {
-                    Remove(location);
+            if(_physicsBody != null) {
+                var bodyParent = _physicsBody.GetParent();
+                bodyParent.RemoveChild(_physicsBody);
+                _physicsBody.QueueFree();
+                orderOfCreation.Remove(_physicsBody);
+                _physicsBody = null;
+            }
+
+            BlendNodes blendNodes;
+            try {
+                blendNodes = RetrieveBlendSceneNodes();
+            } catch (InvalidOperationException e) {
+                GD.PrintErr(e.Message);
+                return;
+            }
+            
+            var body = blendNodes.PhysicsBody;
+
+            if(!value.IsEmpty && body != null) {
+                var parentNode = GetNode<Node>(value);
+                parentNode.AddChild(body);
+                var owner = GetParent()?.Owner ?? GetParent();
+                body.Owner = owner;
+                _physicsBody = body;
+                int indexOfParentNode = orderOfCreation.FindIndex(n => n == parentNode);
+                if(indexOfParentNode == -1) {
+                    orderOfCreation.Add(body);
+                } else {
+                    orderOfCreation.Insert(indexOfParentNode+1, body);
                 }
             }
-            _physicsBodyLocation = value;
-            Reimport();
         }
     }
 
     [Export]
     public NodePath CollisionShapeLocation {
         get {
-            return _collisionShapeLocation;
+            return _collisionShape?.GetPath();
         }
         set {
-            if(_collisionShapeLocation != null && !_collisionShapeLocation.IsEmpty) {
-                var location = _collisionShapeLocation + "/" + CollisionShape3DPath;
-                if (HasNode(location)) {
-                    Remove(location);
+            if(_collisionShape != null) {
+                var collisionShapeParent = _collisionShape.GetParent();
+                collisionShapeParent.RemoveChild(_collisionShape);
+                _collisionShape.QueueFree();
+                orderOfCreation.Remove(_collisionShape);
+                _collisionShape = null;
+            }
+
+            BlendNodes blendNodes;
+            try {
+                blendNodes = RetrieveBlendSceneNodes();
+            } catch (InvalidOperationException e) {
+                GD.PrintErr(e.Message);
+                return;
+            }
+            
+            var collisionShape = blendNodes.CollisionShape;
+
+            if(!value.IsEmpty && collisionShape != null) {
+                var parentNode = GetNode<Node>(value);
+                parentNode.AddChild(collisionShape);
+                var owner = GetParent()?.Owner ?? GetParent();
+                collisionShape.Owner = owner;
+                _collisionShape = collisionShape;
+                int indexOfParentNode = orderOfCreation.FindIndex(n => n == parentNode);
+                if(indexOfParentNode == -1) {
+                    orderOfCreation.Add(collisionShape);
+                } else {
+                    orderOfCreation.Insert(indexOfParentNode+1, collisionShape);
                 }
             }
-            _collisionShapeLocation = value;
-            Reimport();
         }
     }
 
     [Export]
     public NodePath AnimationPlayerLocation {
         get {
-            return _animationPlayerLocation;
+            return _animationPlayer?.GetPath();
         }
         set {
-            if(_animationPlayerLocation != null && !_animationPlayerLocation.IsEmpty) {
-                var location = _animationPlayerLocation + "/" + AnimationPlayerPath;
-                if (HasNode(location)) {
-                    Remove(location);
+            if(_animationPlayer != null) {
+                var animationPlayerParent = _animationPlayer.GetParent();
+                animationPlayerParent.RemoveChild(_animationPlayer);
+                _animationPlayer.QueueFree();
+                orderOfCreation.Remove(_animationPlayer);
+                _animationPlayer = null;
+            }
+
+            BlendNodes blendNodes;
+            try {
+                blendNodes = RetrieveBlendSceneNodes();
+            } catch (InvalidOperationException e) {
+                GD.PrintErr(e.Message);
+                return;
+            }
+            
+            var animationPlayer = blendNodes.AnimationPlayer;
+
+            if(!value.IsEmpty && animationPlayer != null) {
+                var parentNode = GetNode<Node>(value);
+                parentNode.AddChild(animationPlayer);
+                var owner = GetParent()?.Owner ?? GetParent();
+                animationPlayer.Owner = owner;
+                _animationPlayer = animationPlayer;
+                int indexOfParentNode = orderOfCreation.FindIndex(n => n == parentNode);
+                if(indexOfParentNode == -1) {
+                    orderOfCreation.Add(animationPlayer);
+                } else {
+                    orderOfCreation.Insert(indexOfParentNode+1, animationPlayer);
                 }
             }
-            _animationPlayerLocation = value;
-            Reimport();
         }
     }
 
+    private List<Node> orderOfCreation = new List<Node>();
+
+    private bool _completedFirstImport = false;
     private PackedScene _scene;
-    private NodePath _meshLocation { get; set; }
-    private NodePath _physicsBodyLocation { get; set; }
-    private NodePath _collisionShapeLocation { get; set; }
-    private NodePath _animationPlayerLocation { get; set; }
+    private PhysicsTypes _physicsType;
+
+    private MeshInstance3D _mesh { get; set; }
+    private PhysicsBody3D _physicsBody { get; set; }
+    private CollisionShape3D _collisionShape { get; set; }
+    private AnimationPlayer _animationPlayer { get; set; }
 
     public override void _Ready()
     {
         Reimport();
+        _completedFirstImport = true;
     }
 
     public void Reimport() {
-        if(_meshLocation != null && !_meshLocation.IsEmpty) {
-            var location = _meshLocation + "/" + MeshInstance3DPath;
-            if (HasNode(location)) {
-                Remove(location);
-            }
-        }
-
-        if(_physicsBodyLocation != null && !_physicsBodyLocation.IsEmpty) {
-            var location = _physicsBodyLocation + "/" + PhysicsBody3DPath;
-            if (HasNode(location)) {
-                Remove(location);
-            }
-        }
-
-        if(_collisionShapeLocation != null && !_collisionShapeLocation.IsEmpty) {
-            var location = _collisionShapeLocation + "/" + CollisionShape3DPath;
-            if (HasNode(location)) {
-                Remove(location);
-            }
-        }
-
-        if(_animationPlayerLocation != null && !_animationPlayerLocation.IsEmpty) {
-            var location = _animationPlayerLocation + "/" + AnimationPlayerPath;
-            if (HasNode(location)) {
-                Remove(location);
-            }
-        }
-
-        if(_scene == null) {
-            GD.PrintErr($"No scene set for import for {Name}");
+        BlendNodes blendNodes;
+        try {
+            blendNodes = RetrieveBlendSceneNodes();
+        } catch (InvalidOperationException e) {
+            GD.PrintErr(e.Message);
             return;
+        }
+        
+        var mesh = blendNodes.Mesh;
+        var collisionShape = blendNodes.CollisionShape;
+        var body = blendNodes.PhysicsBody;
+        var animationPlayer = blendNodes.AnimationPlayer;
+
+        var owner = GetParent()?.Owner ?? GetParent();
+
+        GD.Print(string.Join(", ", orderOfCreation.Select(n => n.Name)));
+
+        var orderOfCreationWithParents = new List<(Node Node, NodePath ParentPath)>(orderOfCreation.Count);
+
+        for(int ni = orderOfCreation.Count - 1; ni >= 0; ni--)
+        {
+            var node = orderOfCreation[ni];
+            GD.Print("Removing ", node.Name);
+            var parent = node.GetParent();
+            parent.RemoveChild(node);
+            node.QueueFree();
+
+            if(node == _mesh) {
+                _mesh = null;
+
+                if(mesh != null) {
+                    _mesh = mesh;
+                    orderOfCreationWithParents.Add((_mesh, parent.GetPath()));
+                }
+            } else if (node == _physicsBody) {
+                _physicsBody = null;
+
+                if(body != null) {
+                    _physicsBody = body;
+                    orderOfCreationWithParents.Add((_physicsBody, parent.GetPath()));
+                }
+            } else if (node == _collisionShape) {
+                _collisionShape = null;
+
+                if(collisionShape != null) {
+                    _collisionShape = collisionShape;
+                    orderOfCreationWithParents.Add((_collisionShape, parent.GetPath()));
+                }
+            } else if (node == _animationPlayer) {
+                _animationPlayer = null;
+
+                if(animationPlayer != null) {
+                    _animationPlayer = animationPlayer;
+                    orderOfCreationWithParents.Add((_animationPlayer, parent.GetPath()));
+                }
+            }
+        }
+
+        orderOfCreationWithParents.Reverse();
+        orderOfCreation = new List<Node>();
+
+        GD.Print("Removed all the stuff");
+        GD.Print("New order: ", string.Join(", ", orderOfCreationWithParents.Select(n => n.Node.Name)));
+
+        for(int ni = 0; ni < orderOfCreationWithParents.Count; ni++) {
+            var (node, parentPath) = orderOfCreationWithParents[ni];
+            var parent = GetNode(parentPath);
+            parent.AddChild(node);
+            node.Owner = owner;
+            orderOfCreation.Add(node);
+        }
+
+        GD.Print("Final order: ", string.Join(", ", orderOfCreation.Select(n => n.Name)));
+    }
+
+    private BlendNodes RetrieveBlendSceneNodes() {
+        if(_scene == null) {
+            throw new InvalidOperationException($"No scene set for import for {Name}");
         }
 
         // By design, this just gets the first model to avoid any needed intermediate manual process of extracting each body that's needed
@@ -171,20 +327,27 @@ public partial class BlenderImporter : Node
         var staticBody = mesh.GetNodeOrNull<StaticBody3D>(StaticBody3DPath);
         var collisionShape = staticBody?.GetNodeOrNull<CollisionShape3D>(CollisionShape3DPath);
 
+
         if(mesh != null) {
+            mesh.Name = MESH_INSTANCE_3D_NAME;
             importedScene.RemoveChild(mesh);
+            mesh.Owner = null;
 
             if(staticBody != null) {
+                staticBody.Name = PHYSICS_BODY_3D_NAME;
                 mesh.RemoveChild(staticBody);
+                staticBody.Owner = null;
 
                 if(collisionShape != null) {
                     staticBody.RemoveChild(collisionShape);
+                    collisionShape.Owner = null;
                 }
             }
         }
 
         if(animationPlayer != null) {
             importedScene.RemoveChild(animationPlayer);
+            animationPlayer.Owner = null;
         }
 
         importedScene.QueueFree();
@@ -201,46 +364,12 @@ public partial class BlenderImporter : Node
             body = Replace<PhysicsBody3D, RigidBody3D>(staticBody);
         }
 
-        var owner = GetParent()?.Owner ?? GetParent();
-
-        if(mesh != null && _meshLocation != null && !_meshLocation.IsEmpty) {
-            var parentNode = GetNode<Node>(_meshLocation);
-            mesh.Name = MESH_INSTANCE_3D_NAME;
-            mesh.Owner = null;
-            parentNode.AddChild(mesh);
-            mesh.Owner = owner;
-        }
-
-        if(body != null && _physicsBodyLocation != null && !_physicsBodyLocation.IsEmpty) {
-            var parentNode = GetNode<Node>(_physicsBodyLocation);
-            body.Name = PHYSICS_BODY_3D_NAME;
-            body.Owner = null;
-            parentNode.AddChild(body);
-            body.Owner = owner;
-        }
-
-        if(collisionShape != null && _collisionShapeLocation != null && !_collisionShapeLocation.IsEmpty) {
-            var parentNode = GetNode<Node>(_collisionShapeLocation);
-            collisionShape.Owner = null;
-            parentNode.AddChild(collisionShape);
-            collisionShape.Owner = owner;
-        }
-
-        if(animationPlayer != null && _animationPlayerLocation != null && !_animationPlayerLocation.IsEmpty) {
-            var parentNode = GetNode<Node>(_animationPlayerLocation);
-            animationPlayer.Owner = null;
-            parentNode.AddChild(animationPlayer);
-            animationPlayer.Owner = owner;
-        }
-    }
-
-    private void Remove(NodePath nodePath) {
-        var node = GetNodeOrNull(nodePath);
-
-        if(node != null) {
-            node.GetParent().RemoveChild(node);
-            node.QueueFree();
-        }
+        return new BlendNodes() {
+            Mesh = mesh,
+            CollisionShape = collisionShape,
+            PhysicsBody = body,
+            AnimationPlayer = animationPlayer
+        };
     }
 
     private TReplaceNode Replace<TOriganalNode, TReplaceNode>(TOriganalNode original)
