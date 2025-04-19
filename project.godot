@@ -18,7 +18,3 @@ config/icon="res://icon.svg"
 [dotnet]
 
 project/assembly_name="BlenderImporterPlus"
-
-[editor_plugins]
-
-enabled=PackedStringArray("res://addons/EditorScenePostImportPlus/plugin.cfg")

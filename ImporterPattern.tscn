@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://cgafq0wx7t06e"]
+
+[ext_resource type="Script" path="res://Importer.cs" id="1_7a0xe"]
+[ext_resource type="PackedScene" uid="uid://bkfr0lyv7b342" path="res://Meshes/Side Tilt Platform Obstacle V2.blend" id="2_ogp16"]
+
+[node name="ImporterPattern" type="Node3D"]
+
+[node name="Node" type="Node" parent="."]
+script = ExtResource("1_7a0xe")
+Scene = ExtResource("2_ogp16")
+Size = 1.21
+
+[node name="Side Tilt Platform Obstacle V2" type="Node3D" parent="Node" instance=ExtResource("2_ogp16")]
+transform = Transform3D(1.21, 0, 0, 0, 1.21, 0, 0, 0, 1.21, 0, 0, 0)
+
+[node name="Node2" type="Node" parent="."]
+script = ExtResource("1_7a0xe")
+Scene = ExtResource("2_ogp16")
+Size = 0.805
+
+[node name="Side Tilt Platform Obstacle V2" type="Node3D" parent="Node2" instance=ExtResource("2_ogp16")]
+transform = Transform3D(0.805, 0, 0, 0, 0.805, 0, 0, 0, 0.805, 0, 0, 0)

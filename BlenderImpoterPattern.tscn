@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://lfvuienvu0dk"]
+
+[ext_resource type="Script" path="res://BlenderImporter.cs" id="1_1q01i"]
+[ext_resource type="PackedScene" uid="uid://bkfr0lyv7b342" path="res://Meshes/Side Tilt Platform Obstacle V2.blend" id="2_k5k1r"]
+
+[node name="BlenderImpoterPattern" type="Node3D"]
+
+[node name="BlenderImporter" type="Node" parent="."]
+script = ExtResource("1_1q01i")
+Scene = ExtResource("2_k5k1r")
+MeshLocation = NodePath("")
+PhysicsBodyLocation = NodePath("")
+CollisionShapeLocation = NodePath("")
+AnimationPlayerLocation = NodePath("")
