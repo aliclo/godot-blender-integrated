@@ -139,9 +139,7 @@ public partial class BlenderImporter : Node
 
         if(_physicsBodyLocation != null && !_physicsBodyLocation.IsEmpty) {
             var location = _physicsBodyLocation + "/" + PhysicsBody3DPath;
-            GD.Print($"Checking location {location}");
             if (HasNode(location)) {
-                GD.Print("It's there!");
                 Remove(location);
             }
         }
@@ -219,7 +217,6 @@ public partial class BlenderImporter : Node
             body.Owner = null;
             parentNode.AddChild(body);
             body.Owner = owner;
-            GD.Print("Adding physics body");
         }
 
         if(collisionShape != null && _collisionShapeLocation != null && !_collisionShapeLocation.IsEmpty) {
@@ -241,7 +238,6 @@ public partial class BlenderImporter : Node
         var node = GetNodeOrNull(nodePath);
 
         if(node != null) {
-            GD.Print("Removing: ", node);
             node.GetParent().RemoveChild(node);
             node.QueueFree();
         }
