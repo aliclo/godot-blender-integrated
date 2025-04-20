@@ -77,6 +77,12 @@ public partial class BlenderImporter : Node
                 //_mesh = null;
             }
 
+            _meshPath = value;
+
+            if(!IsNodeReady()) {
+                return;
+            }
+
             BlendNodes blendNodes;
             try {
                 blendNodes = RetrieveBlendSceneNodes();
@@ -102,7 +108,6 @@ public partial class BlenderImporter : Node
                     orderOfCreation.Insert(indexOfParentNode+1, meshPath);
                 }
             }
-            _meshPath = value;
         }
     }
 
@@ -120,6 +125,12 @@ public partial class BlenderImporter : Node
                 existingPhysicsBody.QueueFree();
                 orderOfCreation.Remove(existingPhysicsBodyPath);
                 // _physicsBody = null;
+            }
+
+            _physicsBodyPath = value;
+
+            if(!IsNodeReady()) {
+                return;
             }
 
             BlendNodes blendNodes;
@@ -147,7 +158,6 @@ public partial class BlenderImporter : Node
                     orderOfCreation.Insert(indexOfParentNode+1, physicsBodyPath);
                 }
             }
-            _physicsBodyPath = value;
         }
     }
 
@@ -165,6 +175,12 @@ public partial class BlenderImporter : Node
                 existingCollisionShape.QueueFree();
                 orderOfCreation.Remove(existingCollisionShapePath);
                 // _collisionShape = null;
+            }
+
+            _collisionShapePath = value;
+
+            if(!IsNodeReady()) {
+                return;
             }
 
             BlendNodes blendNodes;
@@ -192,7 +208,6 @@ public partial class BlenderImporter : Node
                     orderOfCreation.Insert(indexOfParentNode+1, collisionShapePath);
                 }
             }
-            _collisionShapePath = value;
         }
     }
 
@@ -210,6 +225,12 @@ public partial class BlenderImporter : Node
                 existingAnimationPlayer.QueueFree();
                 orderOfCreation.Remove(existingAnimationPlayerPath);
                 // _animationPlayer = null;
+            }
+
+            _animationPlayerPath = value;
+
+            if(!IsNodeReady()) {
+                return;
             }
 
             BlendNodes blendNodes;
@@ -237,7 +258,6 @@ public partial class BlenderImporter : Node
                     orderOfCreation.Insert(indexOfParentNode+1, animationPlayerPath);
                 }
             }
-            _animationPlayerPath = value;
         }
     }
 
@@ -259,6 +279,7 @@ public partial class BlenderImporter : Node
 
     public override void _Ready()
     {
+        GD.Print("Ready!!");
         Reimport();
         _completedFirstImport = true;
     }
