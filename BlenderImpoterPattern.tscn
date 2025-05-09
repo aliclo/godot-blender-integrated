@@ -53,7 +53,6 @@ shadow_mesh = SubResource("ArrayMesh_vinn2")
 script = ExtResource("1_1q01i")
 Scene = ExtResource("2_k5k1r")
 MeshPipePath = NodePath("../MeshOutput")
-Testing = Array[int]([7, 2])
 
 [node name="MeshOutput" type="Node" parent="."]
 script = ExtResource("3_beaig")
