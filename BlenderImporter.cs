@@ -33,6 +33,13 @@ public partial class BlenderImporter : Node
         public AnimationPlayer AnimationPlayer { get; set; }
     }
 
+    private class NodePipes {
+        public INodePipe CurrentNodePipe => Pipes[CurrentProgress];
+        public object CurrentValue { get; set; }
+        public List<INodePipe> Pipes { get; set; }
+        public int CurrentProgress { get; set; } = 0;
+    }
+
 
     [Export]
     public PhysicsTypes PhysicsType
@@ -89,7 +96,8 @@ public partial class BlenderImporter : Node
             meshPipe = GetNodeOrNull<INodePipe>(_meshPipePath);
             if(meshPipe != null) {
                 meshPipe.PipeConnect();
-                meshPipe.Init(_context, MESH_INSTANCE_3D_NAME);
+                meshPipe.Register(_context, MESH_INSTANCE_3D_NAME);
+                meshPipe.Init();
                 meshPipe.Pipe(blendNodes.Mesh);
             }
         }
@@ -123,7 +131,8 @@ public partial class BlenderImporter : Node
             physicsBodyPipe = GetNodeOrNull<INodePipe>(_physicsBodyPipePath);
             if(physicsBodyPipe != null) {
                 physicsBodyPipe.PipeConnect();
-                physicsBodyPipe.Init(_context, PHYSICS_BODY_3D_NAME);
+                physicsBodyPipe.Register(_context, PHYSICS_BODY_3D_NAME);
+                physicsBodyPipe.Init();
                 physicsBodyPipe.Pipe(blendNodes.PhysicsBody);
             }
         }
@@ -157,7 +166,8 @@ public partial class BlenderImporter : Node
             collisionShapePipe = GetNodeOrNull<INodePipe>(_collisionShapePipePath);
             if(collisionShapePipe != null) {
                 collisionShapePipe.PipeConnect();
-                collisionShapePipe.Init(_context, COLLISION_SHAPE_3D_NAME);
+                collisionShapePipe.Register(_context, COLLISION_SHAPE_3D_NAME);
+                collisionShapePipe.Init();
                 collisionShapePipe.Pipe(blendNodes.CollisionShape);
             }
         }
@@ -191,7 +201,8 @@ public partial class BlenderImporter : Node
             animationPlayerPipe = GetNodeOrNull<INodePipe>(_animationPlayerPipePath);
             if(animationPlayerPipe != null) {
                 animationPlayerPipe.PipeConnect();
-                animationPlayerPipe.Init(_context, ANIMATION_PLAYER_NAME);
+                animationPlayerPipe.Register(_context, ANIMATION_PLAYER_NAME);
+                animationPlayerPipe.Init();
                 animationPlayerPipe.Pipe(blendNodes.AnimationPlayer);
             }
         }
@@ -238,42 +249,133 @@ public partial class BlenderImporter : Node
 
         _context = new PipeContext() {
             RootNode = this,
+            ContextData = new Dictionary<string, object>(),
             OrderOfCreation = new List<NodeOutput>()
         };
 
-        if(meshPipe != null) {
-            meshPipe.Init(_context, MESH_INSTANCE_3D_NAME);
-        }
+        var nodePipesList = new List<NodePipes>();
 
-        if(physicsBodyPipe != null) {
-            physicsBodyPipe.Init(_context, PHYSICS_BODY_3D_NAME);
-        }
-
-        if(collisionShapePipe != null) {
-            collisionShapePipe.Init(_context, COLLISION_SHAPE_3D_NAME);
-        }
-
-        if(animationPlayerPipe != null) {
-            animationPlayerPipe.Init(_context, ANIMATION_PLAYER_NAME);
-        }
-        
-        for(int oi = _context.OrderOfCreation.Count-1; oi >= 0; oi--) {
-            var outputNode = _context.OrderOfCreation[oi];
-            outputNode.Clean();
-        }
-
-        for(int oi = 0; oi < _context.OrderOfCreation.Count; oi++) {
-            var outputNode = _context.OrderOfCreation[oi];
-            
-            if(outputNode == meshPipe) {
-                outputNode.Pipe(mesh);
-            } else if (outputNode == physicsBodyPipe) {
-                outputNode.Pipe(body);
-            } else if (outputNode == collisionShapePipe) {
-                outputNode.Pipe(collisionShape);
-            } else {
-                outputNode.Pipe(animationPlayer);
+        if(mesh != null && meshPipe != null) {
+            meshPipe.Register(_context, MESH_INSTANCE_3D_NAME);
+            var nodePipes = new List<INodePipe>();
+            var nextPipeNode = meshPipe;
+            while(nextPipeNode != null) {
+                nodePipes.Add(nextPipeNode);
+                nextPipeNode = nextPipeNode.NextPipe;
             }
+            nodePipesList.Add(new NodePipes() {
+                CurrentValue = mesh,
+                Pipes = nodePipes,
+                CurrentProgress = 0
+            });
+        }
+
+        if(body != null && physicsBodyPipe != null) {
+            physicsBodyPipe.Register(_context, PHYSICS_BODY_3D_NAME);
+            var nodePipes = new List<INodePipe>();
+            var nextPipeNode = physicsBodyPipe;
+            while(nextPipeNode != null) {
+                nodePipes.Add(nextPipeNode);
+                nextPipeNode = nextPipeNode.NextPipe;
+            }
+            nodePipesList.Add(new NodePipes() {
+                CurrentValue = body,
+                Pipes = nodePipes,
+                CurrentProgress = 0
+            });
+        }
+
+        if(collisionShape != null && collisionShapePipe != null) {
+            collisionShapePipe.Register(_context, COLLISION_SHAPE_3D_NAME);
+            var nodePipes = new List<INodePipe>();
+            var nextPipeNode = collisionShapePipe;
+            while(nextPipeNode != null) {
+                nodePipes.Add(nextPipeNode);
+                nextPipeNode = nextPipeNode.NextPipe;
+            }
+            nodePipesList.Add(new NodePipes() {
+                CurrentValue = collisionShape,
+                Pipes = nodePipes,
+                CurrentProgress = 0
+            });
+        }
+
+        if(animationPlayer != null && animationPlayerPipe != null) {
+            animationPlayerPipe.Register(_context, ANIMATION_PLAYER_NAME);
+            var nodePipes = new List<INodePipe>();
+            var nextPipeNode = animationPlayerPipe;
+            while(nextPipeNode != null) {
+                nodePipes.Add(nextPipeNode);
+                nextPipeNode = nextPipeNode.NextPipe;
+            }
+            nodePipesList.Add(new NodePipes() {
+                CurrentValue = animationPlayer,
+                Pipes = nodePipes,
+                CurrentProgress = 0
+            });
+        }
+
+        if(mesh != null && meshPipe != null) {
+            meshPipe.Init();
+        }
+
+        if(body != null && physicsBodyPipe != null) {
+            physicsBodyPipe.Init();
+        }
+
+        if(collisionShape != null && collisionShapePipe != null) {
+            collisionShapePipe.Init();
+        }
+
+        if(animationPlayer != null && animationPlayerPipe != null) {
+            animationPlayerPipe.Init();
+        }
+
+        // When determining processing, there are two types:
+        // - 1. Ones that can be done directly without any dependency as they are done singly
+        // - 2. Ones that are done together and need to be done within an order
+        // For (2) we can therefore generate this ordering for cleanup and piping
+        
+        var nodePipesOrdering = new List<NodePipes>();
+        var evaluateNodePipes = new List<NodePipes>(nodePipesList);
+        while(evaluateNodePipes.Any()) {
+            if(evaluateNodePipes.Any(p => _context.OrderOfCreation.Contains(p.CurrentNodePipe))) {
+                if(_context.OrderOfCreation.All(ooc => evaluateNodePipes.Select(eoop => eoop.CurrentNodePipe).Contains(ooc))) {
+                    var orderOfEvaluation = _context.OrderOfCreation
+                        .Select(oocp => evaluateNodePipes.Single(eoop => eoop.CurrentNodePipe == oocp))
+                        .ToList();
+                    
+                    foreach(var p in orderOfEvaluation) {
+                        nodePipesOrdering.Add(p);
+                        p.CurrentProgress++;
+                    }
+                } else {
+                    var pipesToProcess = evaluateNodePipes
+                        .Where(p => !_context.OrderOfCreation.Contains(p.CurrentNodePipe));
+                    
+                    foreach(var p in pipesToProcess) {
+                        nodePipesOrdering.Add(p);
+                        p.CurrentProgress++;
+                    }
+                }
+            } else {
+                foreach(var p in evaluateNodePipes) {
+                    nodePipesOrdering.Add(p);
+                    p.CurrentProgress++;
+                }
+            }
+
+            evaluateNodePipes.RemoveAll(p => p.CurrentProgress == p.Pipes.Count);
+        }
+
+        foreach(var p in nodePipesOrdering.Reverse<NodePipes>()) {
+            p.CurrentProgress--;
+            p.CurrentNodePipe.Clean();
+        }
+
+        foreach(var p in nodePipesOrdering) {
+            p.CurrentValue = p.CurrentNodePipe.Pipe(p.CurrentValue);
+            p.CurrentProgress++;
         }
     }
 

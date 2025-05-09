@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 [Tool]
@@ -63,39 +64,58 @@ public partial class NodeOutput : Node, INodePipe
         }
     }
 
+    public INodePipe NextPipe => null;
+
     private PipeContext _context;
     private NodePath _destination;
 
     private string _nodeName;
     private Node _node;
 
-    public void Init(PipeContext context, string nodeName)
+    public void Register(PipeContext context, string nodeName)
     {
         _context = context;
         _nodeName = nodeName;
 
         _node = GetNodeOrNull(_destination + "/" + nodeName);
-        
+
+        HashSet<NodeOutput> nodeOutputs;
+        bool exists = _context.ContextData.TryGetValue(nameof(NodeOutput), out object nodeOutputsObj);
+
+        if(exists) {
+            nodeOutputs = (HashSet<NodeOutput>) nodeOutputsObj;
+        } else {
+            nodeOutputs = new HashSet<NodeOutput>();
+            _context.ContextData[nameof(NodeOutput)] = nodeOutputs;
+        }
+
+        nodeOutputs.Add(this);
+    }
+
+    public void Init()
+    {
         SetOrder();
     }
 
-    public void Pipe(object obj)
+    public object Pipe(object obj)
     {
         if(obj is not Node) {
-            return;
+            return null;
         }
 
         var node = (Node) obj;
         _node = node;
 
         if (_destination == null || _destination.IsEmpty) {
-            return;
+            return null;
         }
 
         var owner = GetParent()?.Owner ?? GetParent();
         var parent = GetNode(_destination);
         parent.AddChild(node);
         node.Owner = owner;
+
+        return null;
     }
 
     public void Clean()
@@ -111,25 +131,26 @@ public partial class NodeOutput : Node, INodePipe
     }
 
     private void SetOrder() {
-        // var nodeAbsolutePath = _context.RootNode.GetPathTo(_node);
-        
         _context.OrderOfCreation.Remove(this);
-        
+
         if(AbsoluteDestination == null || AbsoluteDestination.IsEmpty) {
-            _context.OrderOfCreation.Add(this);
             return;
         }
 
-        int indexOfParentNode = _context.OrderOfCreation.FindIndex(no => no.AbsoluteDestinationIncludingNode == AbsoluteDestination);
-        if(indexOfParentNode == -1) {
-            int indexOfChildNode = _context.OrderOfCreation.FindIndex(no => no.AbsoluteDestination == AbsoluteDestinationIncludingNode);
-            if(indexOfChildNode == -1) {
-                _context.OrderOfCreation.Add(this);
+        var nodeOutputs = (HashSet<NodeOutput>) _context.ContextData[nameof(NodeOutput)];
+
+        if(nodeOutputs.Any(no => no.AbsoluteDestinationIncludingNode == AbsoluteDestination || no.AbsoluteDestination == AbsoluteDestinationIncludingNode)) {
+            int indexOfParentNode = _context.OrderOfCreation.FindIndex(no => no.AbsoluteDestinationIncludingNode == AbsoluteDestination);
+            if(indexOfParentNode != -1) {
+                _context.OrderOfCreation.Insert(indexOfParentNode+1, this);
             } else {
-                _context.OrderOfCreation.Insert(indexOfChildNode, this);
+                int indexOfChildNode = _context.OrderOfCreation.FindIndex(no => no.AbsoluteDestination == AbsoluteDestinationIncludingNode);
+                if(indexOfChildNode != -1) {
+                    _context.OrderOfCreation.Insert(indexOfChildNode, this);
+                } else {
+                    _context.OrderOfCreation.Add(this);
+                }
             }
-        } else {
-            _context.OrderOfCreation.Insert(indexOfParentNode+1, this);
         }
     }
 
@@ -142,5 +163,9 @@ public partial class NodeOutput : Node, INodePipe
     {
         Clean();
         _context.OrderOfCreation.Remove(this);
+
+        var nodeOutputs = (HashSet<NodeOutput>) _context.ContextData[nameof(NodeOutput)];
+        nodeOutputs.Remove(this);
     }
+
 }
