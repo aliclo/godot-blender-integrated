@@ -110,8 +110,13 @@ public partial class NodeOutput : Node, INodePipe
             return null;
         }
 
+        var parent = GetNodeOrNull(_destination);
+
+        if(parent == null) {
+            return null;
+        }
+
         var owner = GetParent()?.Owner ?? GetParent();
-        var parent = GetNode(_destination);
         parent.AddChild(node);
         node.Owner = owner;
 
