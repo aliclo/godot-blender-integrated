@@ -3,7 +3,7 @@ using System.Linq;
 using Godot;
 
 [Tool]
-public partial class NodeOutput : Node, INodePipe
+public partial class NodeOutput : Node, IReceivePipe
 {
 
     [Export]
@@ -64,7 +64,7 @@ public partial class NodeOutput : Node, INodePipe
         }
     }
 
-    public INodePipe NextPipe => null;
+    public IReceivePipe NextPipe => null;
 
     private PipeContext _context;
     private NodePath _destination;
@@ -157,11 +157,6 @@ public partial class NodeOutput : Node, INodePipe
                 }
             }
         }
-    }
-
-    public void PipeConnect()
-    {
-        
     }
 
     public void PipeDisconnect()
