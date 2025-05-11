@@ -64,7 +64,7 @@ public partial class NodeOutput : Node, IReceivePipe
         }
     }
 
-    public IReceivePipe NextPipe => null;
+    public List<IReceivePipe> NextPipes => null;
 
     private PipeContext _context;
     private NodePath _destination;

@@ -368,22 +368,22 @@ public partial class BlenderImporter : Node, IInputPipe
 
         foreach(var meshPipe in meshPipes) {
             meshPipe.Register(_context, MESH_INSTANCE_3D_NAME);
-            _context.RegisterPipe(meshPipe, mesh?.Duplicate());
+            _context.RegisterPipe(meshPipe, new CloneableNode() { Node = mesh });
         }
 
         foreach(var physicsBodyPipe in physicsBodyPipes) {
             physicsBodyPipe.Register(_context, PHYSICS_BODY_3D_NAME);
-            _context.RegisterPipe(physicsBodyPipe, body?.Duplicate());
+            _context.RegisterPipe(physicsBodyPipe, new CloneableNode() { Node = body });
         }
 
         foreach(var collisionShapePipe in collisionShapePipes) {
             collisionShapePipe.Register(_context, COLLISION_SHAPE_3D_NAME);
-            _context.RegisterPipe(collisionShapePipe, collisionShape?.Duplicate());
+            _context.RegisterPipe(collisionShapePipe, new CloneableNode() { Node = collisionShape });
         }
 
         foreach(var animationPlayerPipe in animationPlayerPipes) {
             animationPlayerPipe.Register(_context, ANIMATION_PLAYER_NAME);
-            _context.RegisterPipe(animationPlayerPipe, animationPlayer?.Duplicate());
+            _context.RegisterPipe(animationPlayerPipe, new CloneableNode() { Node = animationPlayer });
         }
     }
 

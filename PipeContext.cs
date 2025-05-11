@@ -36,19 +36,33 @@ public partial class PipeContext : Node {
         }
     }
 
-    public void RegisterPipe(IReceivePipe pipe, object value) {
-        // pipe.Register(this, name);
-        var nodePipes = new List<IReceivePipe>();
-        var nextPipeNode = pipe;
-        while(nextPipeNode != null) {
-            nodePipes.Add(nextPipeNode);
-            nextPipeNode = nextPipeNode.NextPipe;
-        }
-        _nodePipesList.Add(new NodePipes() {
-            CurrentValue = value,
-            Pipes = nodePipes,
+    public void RegisterPipe(IReceivePipe pipe, ICloneableValue cloneableValue) {
+        var processedPipes = new List<List<IReceivePipe>>();
+        var nodePipes = new List<List<IReceivePipe>>() {new List<IReceivePipe>() { pipe }};
+        List<List<IReceivePipe>> nodePipesWithNext;
+
+        do {
+            nodePipesWithNext = nodePipes.Where(np => np.Last().NextPipes != null && np.Last().NextPipes.Any()).ToList();
+            var nodePipesWithoutNext = nodePipes.Except(nodePipesWithNext);
+            processedPipes.AddRange(nodePipesWithoutNext);
+
+            var newNodePipes = new List<List<IReceivePipe>>();
+            foreach(var nodePipe in nodePipesWithNext) {
+                var lastPipe = nodePipe.Last();
+                newNodePipes.AddRange(lastPipe.NextPipes.Select(np => {
+                    var clonedNodePipe = new List<IReceivePipe>(nodePipe);
+                    clonedNodePipe.Add(np);
+                    return clonedNodePipe;
+                }));
+            }
+            nodePipes = newNodePipes;
+        } while (nodePipesWithNext.Any());
+        
+        _nodePipesList.AddRange(processedPipes.Select(p => new NodePipes(){
+            CurrentValue = cloneableValue.CloneValue(),
+            Pipes = p,
             CurrentProgress = 0
-        });
+        }));
     }
 
     private void Import() {
