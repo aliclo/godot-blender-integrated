@@ -41,9 +41,7 @@ public partial class Edgify : Node, IReceivePipe
                 foreach(var destinationPipeToAdd in destinationPipesToAdd) {
                     destinationPipeToAdd.Register(_context, _nodeName);
                     if(_meshInstance3D != null) {
-                        destinationPipeToAdd.Init();
-                        var mesh = _meshInstance3D.Duplicate();
-                        destinationPipeToAdd.Pipe(mesh);
+                        _context.ProcessPipe(destinationPipeToAdd, new CloneableNode() { Node = _meshInstance3D });
                     }
                 }
             }

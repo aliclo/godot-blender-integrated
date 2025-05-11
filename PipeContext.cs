@@ -37,6 +37,17 @@ public partial class PipeContext : Node {
     }
 
     public void RegisterPipe(IReceivePipe pipe, ICloneableValue cloneableValue) {
+        _nodePipesList.AddRange(GetNodePipes(pipe, cloneableValue));
+    }
+
+    public void ProcessPipe(IReceivePipe pipe, ICloneableValue cloneableValue) {
+        pipe.Init();
+        var nodePipes = GetNodePipes(pipe, cloneableValue).ToList();
+        var nodePipesOrdering = OrderEvaluation(nodePipes);
+        EvaluateNodePipes(nodePipesOrdering);
+    }
+
+    private IEnumerable<NodePipes> GetNodePipes(IReceivePipe pipe, ICloneableValue cloneableValue) {
         var processedPipes = new List<List<IReceivePipe>>();
         var nodePipes = new List<List<IReceivePipe>>() {new List<IReceivePipe>() { pipe }};
         List<List<IReceivePipe>> nodePipesWithNext;
@@ -58,47 +69,21 @@ public partial class PipeContext : Node {
             nodePipes = newNodePipes;
         } while (nodePipesWithNext.Any());
         
-        _nodePipesList.AddRange(processedPipes.Select(p => new NodePipes(){
+        return processedPipes.Select(p => new NodePipes(){
             CurrentValue = cloneableValue.CloneValue(),
             Pipes = p,
             CurrentProgress = 0
-        }));
+        });
     }
 
-    private void Import() {
-        var allDescendents = new List<Node>();
-        var children = GetChildren().ToList();
-
-        while(children.Any()) {
-            allDescendents.AddRange(children);
-            children = children.SelectMany(c => c.GetChildren()).ToList();
-        }
-        
-        var inputPipes = allDescendents
-            .Where(n => n is IInputPipe)
-            .Select(n => (IInputPipe) n);
-
-        OrderOfCreation = new List<NodeOutput>();
-        ContextData = new System.Collections.Generic.Dictionary<string, object>();
-        _nodePipesList = new List<NodePipes>();
-
-        foreach(var inputPipe in inputPipes) {
-            inputPipe.Register();
-        }
-
-        foreach(var pipeList in _nodePipesList) {
-            foreach(var pipe in pipeList.Pipes) {
-                pipe.Init();
-            }
-        }
-
+    private List<NodePipes> OrderEvaluation(List<NodePipes> nodePipesList) {
         // When determining processing, there are two types:
         // - 1. Ones that can be done directly without any dependency as they are done singly
         // - 2. Ones that are done together and need to be done within an order
         // For (2) we can therefore generate this ordering for cleanup and piping
         
         var nodePipesOrdering = new List<NodePipes>();
-        var evaluateNodePipes = new List<NodePipes>(_nodePipesList);
+        var evaluateNodePipes = new List<NodePipes>(nodePipesList);
         while(evaluateNodePipes.Any()) {
             if(evaluateNodePipes.Any(p => OrderOfCreation.Contains(p.CurrentNodePipe))) {
                 if(OrderOfCreation.All(ooc => evaluateNodePipes.Select(eoop => eoop.CurrentNodePipe).Contains(ooc))) {
@@ -129,6 +114,10 @@ public partial class PipeContext : Node {
             evaluateNodePipes.RemoveAll(p => p.CurrentProgress == p.Pipes.Count);
         }
 
+        return nodePipesOrdering;
+    }
+
+    private void EvaluateNodePipes(List<NodePipes> nodePipesOrdering) {
         foreach(var p in nodePipesOrdering.Reverse<NodePipes>()) {
             p.CurrentProgress--;
             p.CurrentNodePipe.Clean();
@@ -139,6 +128,38 @@ public partial class PipeContext : Node {
             p.CurrentValue = p.CurrentNodePipe.Pipe(p.CurrentValue);
             p.CurrentProgress++;
         }
+    }
+
+    private void Import() {
+        var allDescendents = new List<Node>();
+        var children = GetChildren().ToList();
+
+        while(children.Any()) {
+            allDescendents.AddRange(children);
+            children = children.SelectMany(c => c.GetChildren()).ToList();
+        }
+        
+        var inputPipes = allDescendents
+            .Where(n => n is IInputPipe)
+            .Select(n => (IInputPipe) n);
+
+        OrderOfCreation = new List<NodeOutput>();
+        ContextData = new System.Collections.Generic.Dictionary<string, object>();
+        _nodePipesList = new List<NodePipes>();
+
+        foreach(var inputPipe in inputPipes) {
+            inputPipe.Register();
+        }
+
+        foreach(var pipeList in _nodePipesList) {
+            foreach(var pipe in pipeList.Pipes) {
+                pipe.Init();
+            }
+        }
+
+        var nodePipesOrdering = OrderEvaluation(_nodePipesList);
+
+        EvaluateNodePipes(nodePipesOrdering);
     }
     
 }

@@ -92,9 +92,7 @@ public partial class BlenderImporter : Node, IInputPipe
                 foreach(var meshPipeToAdd in meshPipesToAdd) {
                     meshPipeToAdd.Register(_context, MESH_INSTANCE_3D_NAME);
                     if(blendNodes.Mesh != null) {
-                        meshPipeToAdd.Init();
-                        var mesh = blendNodes.Mesh.Duplicate();
-                        meshPipeToAdd.Pipe(mesh);
+                        _context.ProcessPipe(meshPipeToAdd, new CloneableNode() { Node = blendNodes.Mesh });
                     }
                 }
             }
@@ -136,9 +134,7 @@ public partial class BlenderImporter : Node, IInputPipe
                 foreach(var physicsBodyPipeToAdd in physicsBodyPipesToAdd) {
                     physicsBodyPipeToAdd.Register(_context, MESH_INSTANCE_3D_NAME);
                     if(blendNodes.PhysicsBody != null) {
-                        physicsBodyPipeToAdd.Init();
-                        var physicsBody = blendNodes.PhysicsBody.Duplicate();
-                        physicsBodyPipeToAdd.Pipe(physicsBody);
+                        _context.ProcessPipe(physicsBodyPipeToAdd, new CloneableNode() { Node = blendNodes.PhysicsBody });
                     }
                 }
             }
@@ -180,9 +176,7 @@ public partial class BlenderImporter : Node, IInputPipe
                 foreach(var collisionShapePipeToAdd in collisionShapePipesToAdd) {
                     collisionShapePipeToAdd.Register(_context, MESH_INSTANCE_3D_NAME);
                     if(blendNodes.CollisionShape != null) {
-                        collisionShapePipeToAdd.Init();
-                        var collisionShape = blendNodes.CollisionShape.Duplicate();
-                        collisionShapePipeToAdd.Pipe(collisionShape);
+                        _context.ProcessPipe(collisionShapePipeToAdd, new CloneableNode() { Node = blendNodes.CollisionShape });
                     }
                 }
             }
@@ -224,9 +218,7 @@ public partial class BlenderImporter : Node, IInputPipe
                 foreach(var animationPlayerPipeToAdd in animationPlayerPipesToAdd) {
                     animationPlayerPipeToAdd.Register(_context, MESH_INSTANCE_3D_NAME);
                     if(blendNodes.AnimationPlayer != null) {
-                        animationPlayerPipeToAdd.Init();
-                        var animationPlayer = blendNodes.AnimationPlayer.Duplicate();
-                        animationPlayerPipeToAdd.Pipe(animationPlayer);
+                        _context.ProcessPipe(animationPlayerPipeToAdd, new CloneableNode() { Node = blendNodes.AnimationPlayer });
                     }
                 }
             }
