@@ -31,7 +31,7 @@ public class DestinationHelper {
             foreach(var destinationPipeToAdd in destinationPipesToAdd) {
                 destinationPipeToAdd.Register(pipeContext, destinationNodeName);
                 if(cloneableValue != null) {
-                    pipeContext.ProcessPipe(destinationPipeToAdd, cloneableValue);
+                    pipeContext.ReprocessPipe(destinationPipeToAdd, cloneableValue);
                 }
             }
         }

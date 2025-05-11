@@ -42,7 +42,7 @@ public partial class BlenderImporter : Node, IInputPipe
         }
         set {
             _physicsType = value;
-            _context?.Reimport();
+            _context?.Reprocess();
         }
     }
 
@@ -53,7 +53,7 @@ public partial class BlenderImporter : Node, IInputPipe
         }
         set {
             _scene = value;
-            _context?.Reimport();
+            _context?.Reprocess();
         }
     }
 

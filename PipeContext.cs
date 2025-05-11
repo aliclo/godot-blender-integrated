@@ -25,14 +25,14 @@ public partial class PipeContext : Node {
         Owner.Ready += () => {
             GD.Print("Ready!!");
 
-            Import();
+            Process();
             _completedFirstImport = true;
         };
     }
 
-    public void Reimport() {
+    public void Reprocess() {
         if(_completedFirstImport) {
-            Import();
+            Process();
         }
     }
 
@@ -40,7 +40,7 @@ public partial class PipeContext : Node {
         _nodePipesList.AddRange(GetNodePipes(pipe, cloneableValue));
     }
 
-    public void ProcessPipe(IReceivePipe pipe, ICloneableValue cloneableValue) {
+    public void ReprocessPipe(IReceivePipe pipe, ICloneableValue cloneableValue) {
         pipe.Init();
         var nodePipes = GetNodePipes(pipe, cloneableValue).ToList();
         var nodePipesOrdering = OrderEvaluation(nodePipes);
@@ -130,7 +130,7 @@ public partial class PipeContext : Node {
         }
     }
 
-    private void Import() {
+    private void Process() {
         var allDescendents = new List<Node>();
         var children = GetChildren().ToList();
 
