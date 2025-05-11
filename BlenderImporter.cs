@@ -330,7 +330,7 @@ public partial class BlenderImporter : Node, IInputPipe
         return replaceNode;
     }
 
-    public void Register(PipeContext context)
+    public void Register()
     {
         BlendNodes blendNodes;
         try {
@@ -366,8 +366,6 @@ public partial class BlenderImporter : Node, IInputPipe
             animationPlayerPipes = _animationPlayerPipePaths.Select(p => GetNodeOrNull<IReceivePipe>(p)).Where(p => p != null);
         }
 
-        _context = context;
-
         foreach(var meshPipe in meshPipes) {
             meshPipe.Register(_context, MESH_INSTANCE_3D_NAME);
             _context.RegisterPipe(meshPipe, mesh?.Duplicate());
@@ -388,5 +386,23 @@ public partial class BlenderImporter : Node, IInputPipe
             _context.RegisterPipe(animationPlayerPipe, animationPlayer?.Duplicate());
         }
     }
+
+    public override void _EnterTree()
+    {
+        var ascendant = GetParent();
+
+        while(ascendant != null && ascendant is not PipeContext) {
+            ascendant = ascendant.GetParent();
+        }
+
+        if(ascendant == null) {
+            GD.PrintErr($"{Name} is not in a pipe context and cannot be processed");
+        }
+
+        var pipeContext = (PipeContext) ascendant;
+        _context = pipeContext;
+    }
+
+
 
 }

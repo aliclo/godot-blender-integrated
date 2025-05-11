@@ -69,7 +69,7 @@ public partial class PipeContext : Node {
         _nodePipesList = new List<NodePipes>();
 
         foreach(var inputPipe in inputPipes) {
-            inputPipe.Register(this);
+            inputPipe.Register();
         }
 
         foreach(var pipeList in _nodePipesList) {
