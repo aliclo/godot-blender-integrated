@@ -36,18 +36,30 @@ public partial class PipeContext : Node {
         }
     }
 
-    public void RegisterPipe(IReceivePipe pipe, ICloneableValue cloneableValue) {
-        _nodePipesList.AddRange(GetNodePipes(pipe, cloneableValue));
+    public void RegisterPipe(ValuePipe valuePipe) {
+        _nodePipesList.AddRange(GetNodePipes(valuePipe));
     }
 
-    public void ReprocessPipe(IReceivePipe pipe, ICloneableValue cloneableValue) {
-        pipe.Init();
-        var nodePipes = GetNodePipes(pipe, cloneableValue).ToList();
+    public void ReprocessPipe(List<ValuePipe> valuePipes) {
+        foreach(var valuePipe in valuePipes) {
+            valuePipe.Pipe.Init();
+        }
+
+        var nodePipes = new List<NodePipes>();
+
+        foreach(var valuePipe in valuePipes) {
+            nodePipes.AddRange(GetNodePipes(valuePipe));
+        }
+
         var nodePipesOrdering = OrderEvaluation(nodePipes);
         EvaluateNodePipes(nodePipesOrdering);
     }
 
-    private IEnumerable<NodePipes> GetNodePipes(IReceivePipe pipe, ICloneableValue cloneableValue) {
+    private IEnumerable<NodePipes> GetNodePipes(ValuePipe valuePipe)
+    {
+        var pipe = valuePipe.Pipe;
+        var cloneableValue = valuePipe.CloneableValue;
+
         var processedPipes = new List<List<IReceivePipe>>();
         var nodePipes = new List<List<IReceivePipe>>() {new List<IReceivePipe>() { pipe }};
         List<List<IReceivePipe>> nodePipesWithNext;

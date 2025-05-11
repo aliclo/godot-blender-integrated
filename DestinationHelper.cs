@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using Godot.Collections;
@@ -30,9 +31,11 @@ public class DestinationHelper {
 
             foreach(var destinationPipeToAdd in destinationPipesToAdd) {
                 destinationPipeToAdd.Register(pipeContext, destinationNodeName);
-                if(cloneableValue != null) {
-                    pipeContext.ReprocessPipe(destinationPipeToAdd, cloneableValue);
-                }
+            }
+
+            if(cloneableValue != null) {
+                var valuePipes = destinationPipesToAdd.Select(p => new ValuePipe() { Pipe = p, CloneableValue = cloneableValue}).ToList();
+                pipeContext.ReprocessPipe(valuePipes);
             }
         }
     }
