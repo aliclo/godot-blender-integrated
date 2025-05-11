@@ -1,6 +1,5 @@
 using Godot;
 using Godot.Collections;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -19,12 +18,15 @@ public partial class Edgify : Node, IReceivePipe
             var previousDestinationPaths = _destinations ?? new Array<NodePath>();
             _destinations = value ?? new Array<NodePath>();
 
-            var destinationPipesPathsToRemove = previousDestinationPaths.Except(value);
-            var destinationPipesToRemove = destinationPipesPathsToRemove.Select(p => GetNodeOrNull<IReceivePipe>(p)).Where(p => p != null);
-
-            foreach(var destinationPipeToRemove in destinationPipesToRemove) {
-                destinationPipeToRemove.PipeDisconnect();
-            }
+            var destinationHelper = new DestinationHelper();
+            destinationHelper.HandleDestinationChange(new DestinationPropertyInfo() {
+                PipeContext = _context,
+                Node = this,
+                DestinationNodeName = _nodeName,
+                PreviousDestinationPaths = previousDestinationPaths,
+                NewDestinationPaths = _destinations,
+                CloneableValue = _meshInstance3D == null ? null : new CloneableNode() { Node = _meshInstance3D }
+            });
 
             if(!IsNodeReady()) {
                 return;
@@ -33,18 +35,6 @@ public partial class Edgify : Node, IReceivePipe
             NextPipes = _destinations
                 .Select(d => GetNodeOrNull<IReceivePipe>(d))
                 .Where(p => p != null).ToList();
-
-            if(_context != null) {
-                var destinationPipesPathsToAdd = value.Except(previousDestinationPaths);
-                var destinationPipesToAdd = destinationPipesPathsToAdd.Select(p => GetNodeOrNull<IReceivePipe>(p)).Where(p => p != null);
-
-                foreach(var destinationPipeToAdd in destinationPipesToAdd) {
-                    destinationPipeToAdd.Register(_context, _nodeName);
-                    if(_meshInstance3D != null) {
-                        _context.ProcessPipe(destinationPipeToAdd, new CloneableNode() { Node = _meshInstance3D });
-                    }
-                }
-            }
         }
     }
     public List<IReceivePipe> NextPipes { get; set; } = new List<IReceivePipe>();

@@ -63,39 +63,29 @@ public partial class BlenderImporter : Node, IInputPipe
             return _meshPipePaths;
         }
         set {
+            BlendNodes blendNodes = null;
+
+            if(IsNodeReady()) {
+                try {
+                    blendNodes = RetrieveBlendSceneNodes();
+                } catch (InvalidOperationException e) {
+                    GD.PrintErr(e.Message);
+                    return;
+                }
+            }
+            
             var previousMeshPipePaths = _meshPipePaths ?? new Array<NodePath>();
             _meshPipePaths = value ?? new Array<NodePath>();
 
-            var meshPipesPathsToRemove = previousMeshPipePaths.Except(value);
-            var meshPipesToRemove = meshPipesPathsToRemove.Select(p => GetNodeOrNull<IReceivePipe>(p)).Where(p => p != null);
-
-            foreach(var meshPipeToRemove in meshPipesToRemove) {
-                meshPipeToRemove.PipeDisconnect();
-            }
-
-            if(!IsNodeReady()) {
-                return;
-            }
-
-            BlendNodes blendNodes;
-            try {
-                blendNodes = RetrieveBlendSceneNodes();
-            } catch (InvalidOperationException e) {
-                GD.PrintErr(e.Message);
-                return;
-            }
-
-            if(_context != null) {
-                var meshPipesPathsToAdd = value.Except(previousMeshPipePaths);
-                var meshPipesToAdd = meshPipesPathsToAdd.Select(p => GetNodeOrNull<IReceivePipe>(p)).Where(p => p != null);
-
-                foreach(var meshPipeToAdd in meshPipesToAdd) {
-                    meshPipeToAdd.Register(_context, MESH_INSTANCE_3D_NAME);
-                    if(blendNodes.Mesh != null) {
-                        _context.ProcessPipe(meshPipeToAdd, new CloneableNode() { Node = blendNodes.Mesh });
-                    }
-                }
-            }
+            var destinationHelper = new DestinationHelper();
+            destinationHelper.HandleDestinationChange(new DestinationPropertyInfo() {
+                PipeContext = _context,
+                Node = this,
+                DestinationNodeName = MESH_INSTANCE_3D_NAME,
+                PreviousDestinationPaths = previousMeshPipePaths,
+                NewDestinationPaths = _meshPipePaths,
+                CloneableValue = blendNodes?.Mesh == null ? null : new CloneableNode() { Node = blendNodes.Mesh }
+            });
         }
     }
     
@@ -105,39 +95,29 @@ public partial class BlenderImporter : Node, IInputPipe
             return _physicsBodyPipePaths;
         }
         set {
+            BlendNodes blendNodes = null;
+
+            if(IsNodeReady()) {
+                try {
+                    blendNodes = RetrieveBlendSceneNodes();
+                } catch (InvalidOperationException e) {
+                    GD.PrintErr(e.Message);
+                    return;
+                }
+            }
+            
             var previousPhysicsBodyPipePaths = _physicsBodyPipePaths ?? new Array<NodePath>();
             _physicsBodyPipePaths = value ?? new Array<NodePath>();
 
-            var physicsBodyPipesPathsToRemove = previousPhysicsBodyPipePaths.Except(value);
-            var physicsBodyPipesToRemove = physicsBodyPipesPathsToRemove.Select(p => GetNodeOrNull<IReceivePipe>(p)).Where(p => p != null);
-
-            foreach(var physicsBodyPipeToRemove in physicsBodyPipesToRemove) {
-                physicsBodyPipeToRemove.PipeDisconnect();
-            }
-
-            if(!IsNodeReady()) {
-                return;
-            }
-
-            BlendNodes blendNodes;
-            try {
-                blendNodes = RetrieveBlendSceneNodes();
-            } catch (InvalidOperationException e) {
-                GD.PrintErr(e.Message);
-                return;
-            }
-
-            if(_context != null) {
-                var physicsBodyPipesPathsToAdd = value.Except(previousPhysicsBodyPipePaths);
-                var physicsBodyPipesToAdd = physicsBodyPipesPathsToAdd.Select(p => GetNodeOrNull<IReceivePipe>(p)).Where(p => p != null);
-
-                foreach(var physicsBodyPipeToAdd in physicsBodyPipesToAdd) {
-                    physicsBodyPipeToAdd.Register(_context, MESH_INSTANCE_3D_NAME);
-                    if(blendNodes.PhysicsBody != null) {
-                        _context.ProcessPipe(physicsBodyPipeToAdd, new CloneableNode() { Node = blendNodes.PhysicsBody });
-                    }
-                }
-            }
+            var destinationHelper = new DestinationHelper();
+            destinationHelper.HandleDestinationChange(new DestinationPropertyInfo() {
+                PipeContext = _context,
+                Node = this,
+                DestinationNodeName = PHYSICS_BODY_3D_NAME,
+                PreviousDestinationPaths = previousPhysicsBodyPipePaths,
+                NewDestinationPaths = _physicsBodyPipePaths,
+                CloneableValue = blendNodes?.PhysicsBody == null ? null : new CloneableNode() { Node = blendNodes.PhysicsBody }
+            });
         }
     }
     
@@ -147,39 +127,29 @@ public partial class BlenderImporter : Node, IInputPipe
             return _collisionShapePipePaths;
         }
         set {
+            BlendNodes blendNodes = null;
+
+            if(IsNodeReady()) {
+                try {
+                    blendNodes = RetrieveBlendSceneNodes();
+                } catch (InvalidOperationException e) {
+                    GD.PrintErr(e.Message);
+                    return;
+                }
+            }
+            
             var previousCollisionShapePipePaths = _collisionShapePipePaths ?? new Array<NodePath>();
             _collisionShapePipePaths = value ?? new Array<NodePath>();
 
-            var collisionShapePipesPathsToRemove = previousCollisionShapePipePaths.Except(value);
-            var collisionShapePipesToRemove = collisionShapePipesPathsToRemove.Select(p => GetNodeOrNull<IReceivePipe>(p)).Where(p => p != null);
-
-            foreach(var collisionShapePipeToRemove in collisionShapePipesToRemove) {
-                collisionShapePipeToRemove.PipeDisconnect();
-            }
-
-            if(!IsNodeReady()) {
-                return;
-            }
-
-            BlendNodes blendNodes;
-            try {
-                blendNodes = RetrieveBlendSceneNodes();
-            } catch (InvalidOperationException e) {
-                GD.PrintErr(e.Message);
-                return;
-            }
-
-            if(_context != null) {
-                var collisionShapePipesPathsToAdd = value.Except(previousCollisionShapePipePaths);
-                var collisionShapePipesToAdd = collisionShapePipesPathsToAdd.Select(p => GetNodeOrNull<IReceivePipe>(p)).Where(p => p != null);
-
-                foreach(var collisionShapePipeToAdd in collisionShapePipesToAdd) {
-                    collisionShapePipeToAdd.Register(_context, MESH_INSTANCE_3D_NAME);
-                    if(blendNodes.CollisionShape != null) {
-                        _context.ProcessPipe(collisionShapePipeToAdd, new CloneableNode() { Node = blendNodes.CollisionShape });
-                    }
-                }
-            }
+            var destinationHelper = new DestinationHelper();
+            destinationHelper.HandleDestinationChange(new DestinationPropertyInfo() {
+                PipeContext = _context,
+                Node = this,
+                DestinationNodeName = COLLISION_SHAPE_3D_NAME,
+                PreviousDestinationPaths = previousCollisionShapePipePaths,
+                NewDestinationPaths = _collisionShapePipePaths,
+                CloneableValue = blendNodes?.CollisionShape == null ? null : new CloneableNode() { Node = blendNodes.CollisionShape }
+            });
         }
     }
     
@@ -189,39 +159,29 @@ public partial class BlenderImporter : Node, IInputPipe
             return _animationPlayerPipePaths;
         }
         set {
+            BlendNodes blendNodes = null;
+
+            if(IsNodeReady()) {
+                try {
+                    blendNodes = RetrieveBlendSceneNodes();
+                } catch (InvalidOperationException e) {
+                    GD.PrintErr(e.Message);
+                    return;
+                }
+            }
+            
             var previousAnimationPlayerPipePaths = _animationPlayerPipePaths ?? new Array<NodePath>();
             _animationPlayerPipePaths = value ?? new Array<NodePath>();
 
-            var animationPlayerPipesPathsToRemove = previousAnimationPlayerPipePaths.Except(value);
-            var animationPlayerPipesToRemove = animationPlayerPipesPathsToRemove.Select(p => GetNodeOrNull<IReceivePipe>(p)).Where(p => p != null);
-
-            foreach(var animationPlayerPipeToRemove in animationPlayerPipesToRemove) {
-                animationPlayerPipeToRemove.PipeDisconnect();
-            }
-
-            if(!IsNodeReady()) {
-                return;
-            }
-
-            BlendNodes blendNodes;
-            try {
-                blendNodes = RetrieveBlendSceneNodes();
-            } catch (InvalidOperationException e) {
-                GD.PrintErr(e.Message);
-                return;
-            }
-
-            if(_context != null) {
-                var animationPlayerPipesPathsToAdd = value.Except(previousAnimationPlayerPipePaths);
-                var animationPlayerPipesToAdd = animationPlayerPipesPathsToAdd.Select(p => GetNodeOrNull<IReceivePipe>(p)).Where(p => p != null);
-
-                foreach(var animationPlayerPipeToAdd in animationPlayerPipesToAdd) {
-                    animationPlayerPipeToAdd.Register(_context, MESH_INSTANCE_3D_NAME);
-                    if(blendNodes.AnimationPlayer != null) {
-                        _context.ProcessPipe(animationPlayerPipeToAdd, new CloneableNode() { Node = blendNodes.AnimationPlayer });
-                    }
-                }
-            }
+            var destinationHelper = new DestinationHelper();
+            destinationHelper.HandleDestinationChange(new DestinationPropertyInfo() {
+                PipeContext = _context,
+                Node = this,
+                DestinationNodeName = ANIMATION_PLAYER_NAME,
+                PreviousDestinationPaths = previousAnimationPlayerPipePaths,
+                NewDestinationPaths = _animationPlayerPipePaths,
+                CloneableValue = blendNodes?.AnimationPlayer == null ? null : new CloneableNode() { Node = blendNodes.AnimationPlayer }
+            });
         }
     }
 
