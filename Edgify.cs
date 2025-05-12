@@ -158,14 +158,15 @@ public partial class Edgify : Node, IReceivePipe
         }
     }
 
-    public object Pipe(object obj)
+    public PipeValue Pipe(PipeValue pipeValue)
     {
+        var obj = pipeValue.Value;
+
         if(obj is not MeshInstance3D) {
             return null;
         }
 
         var meshInstance = (MeshInstance3D) obj;
-        _meshInstance3D = meshInstance;
 
         float sharpnessThresholdRad = (float) (SharpnessThreshold*Math.PI/180);
         float minYAngleRad = (float) (MinYAngle*Math.PI/180-Math.PI);
@@ -347,7 +348,14 @@ public partial class Edgify : Node, IReceivePipe
         edgeMeshInstance.Mesh = arrMesh;
         edgeMeshInstance.Name = _nodeName;
 
-        return edgeMeshInstance;
+        _meshInstance3D = edgeMeshInstance;
+
+        return new PipeValue() {
+            Value = _meshInstance3D,
+            TouchedProperties = new List<string>() {
+                nameof(edgeMeshInstance.Mesh).ToLower()
+            }
+        };
     }
 
     public void Clean()

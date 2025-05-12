@@ -6,6 +6,41 @@ using Godot;
 public partial class NodeOutput : Node, IReceivePipe
 {
 
+    private class NodeProp {
+        public string Name { get; set; }
+        public Variant Value { get; set; }
+    }
+
+    private static readonly List<string> PropNamesToIgnore = new List<string>() {
+        "Node",
+        "_import_path",
+        "name",
+        "unique_name_in_owner",
+        "scene_file_path",
+        "owner",
+        "multiplayer",
+        "Process",
+        "Node3D",
+        "Thread Group",
+        "Transform",
+        "global_transform",
+        "global_position",
+        "global_basis",
+        "global_rotation",
+        "global_rotation_degrees",
+        "Visibility",
+        "visibility_parent",
+        "VisualInstance3D",
+        "Sorting",
+        "GeometryInstance3D",
+        "Geometry",
+        "Global Illumination",
+        "Visibility Range",
+        "MeshInstance3D",
+        "Skeleton",
+        "MyScript"
+    };
+
     [Export]
     public NodePath Destination {
         get {
@@ -71,6 +106,8 @@ public partial class NodeOutput : Node, IReceivePipe
 
     private string _nodeName;
     private Node _node;
+    private List<Node> _previousNodeChildren;
+    private List<NodeProp> _previousNodeProps;
 
     public void Register(PipeContext context, string nodeName)
     {
@@ -78,6 +115,9 @@ public partial class NodeOutput : Node, IReceivePipe
         _nodeName = nodeName;
 
         _node = GetNodeOrNull(_destination + "/" + nodeName);
+        if(_node != null) {
+            GetPreviousNodeValues(_node);
+        }
 
         HashSet<NodeOutput> nodeOutputs;
         bool exists = _context.ContextData.TryGetValue(nameof(NodeOutput), out object nodeOutputsObj);
@@ -97,13 +137,29 @@ public partial class NodeOutput : Node, IReceivePipe
         SetOrder();
     }
 
-    public object Pipe(object obj)
+    public PipeValue Pipe(PipeValue pipeValue)
     {
+        var obj = pipeValue.Value;
         if(obj is not Node) {
             return null;
         }
 
         var node = (Node) obj;
+
+        if(_previousNodeProps != null) {
+            foreach(var prop in _previousNodeProps.Where(p => !pipeValue.TouchedProperties.Contains(p.Name))) {
+                node.Set(prop.Name, prop.Value);
+            }
+        }
+
+        if(_previousNodeChildren != null) {
+            foreach(var child in _previousNodeChildren) {
+                child.GetParent().RemoveChild(child);
+                child.Owner = null;
+                node.AddChild(child);
+            }
+        }
+
         _node = node;
 
         if (_destination == null || _destination.IsEmpty) {
@@ -120,7 +176,19 @@ public partial class NodeOutput : Node, IReceivePipe
         parent.AddChild(node);
         node.Owner = owner;
 
+        GetPreviousNodeValues(node);
+
         return null;
+    }
+
+    private void GetPreviousNodeValues(Node previousNode) {
+        var properties = previousNode.GetPropertyList();
+        var names = properties.Select(p => (string) p["name"]).Where(n => !PropNamesToIgnore.Contains(n));
+        _previousNodeProps = names
+            .Select(n => new NodeProp() { Name = n, Value = previousNode.Get(n) })
+            .ToList();
+
+        _previousNodeChildren = previousNode.GetChildren().ToList();
     }
 
     public void Clean()

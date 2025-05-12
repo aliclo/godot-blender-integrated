@@ -1,21 +1,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
-using Godot.Collections;
 
 [Tool]
 public partial class PipeContext : Node {
 
     private class NodePipes {
         public IReceivePipe CurrentNodePipe => Pipes[CurrentProgress];
-        public object CurrentValue { get; set; }
+        public PipeValue CurrentValue { get; set; }
         public List<IReceivePipe> Pipes { get; set; }
         public int CurrentProgress { get; set; } = 0;
     }
 
     public Node RootNode => this;
     public List<NodeOutput> OrderOfCreation { get; set; }
-    public System.Collections.Generic.Dictionary<string, object> ContextData { get; set; }
+    public Dictionary<string, object> ContextData { get; set; }
 
     private List<NodePipes> _nodePipesList;
     private bool _completedFirstImport = false;
@@ -82,7 +81,10 @@ public partial class PipeContext : Node {
         } while (nodePipesWithNext.Any());
         
         return processedPipes.Select(p => new NodePipes(){
-            CurrentValue = cloneableValue.CloneValue(),
+            CurrentValue = new PipeValue() {
+                Value = cloneableValue.CloneValue(),
+                TouchedProperties = new List<string>()
+            },
             Pipes = p,
             CurrentProgress = 0
         });
