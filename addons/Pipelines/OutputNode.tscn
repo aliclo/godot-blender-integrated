@@ -1,0 +1,28 @@
+[gd_scene load_steps=2 format=3 uid="uid://mb3sky5b37a2"]
+
+[ext_resource type="Script" path="res://addons/Pipelines/OutputNode.cs" id="1_ngf34"]
+
+[node name="OutputNode" type="GraphNode"]
+offset_right = 153.0
+offset_bottom = 115.0
+mouse_filter = 1
+title = "Output"
+slot/0/left_enabled = true
+slot/0/left_type = 10
+slot/0/left_color = Color(1, 1, 1, 1)
+slot/0/left_icon = null
+slot/0/right_enabled = false
+slot/0/right_type = 0
+slot/0/right_color = Color(1, 1, 1, 1)
+slot/0/right_icon = null
+slot/0/draw_stylebox = true
+slot/1/left_enabled = false
+slot/1/left_type = 0
+slot/1/left_color = Color(1, 1, 1, 1)
+slot/1/left_icon = null
+slot/1/right_enabled = false
+slot/1/right_type = 0
+slot/1/right_color = Color(1, 1, 1, 1)
+slot/1/right_icon = null
+slot/1/draw_stylebox = true
+script = ExtResource("1_ngf34")
