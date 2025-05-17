@@ -1,9 +1,10 @@
 using Godot;
 using Godot.Collections;
+using System.Collections.Generic;
 using System.Linq;
 
 [Tool]
-public partial class PipelineGraph : GraphEdit
+public partial class PipelineGraph : GraphEdit, IStorable
 {
 
     [Export]
@@ -19,8 +20,8 @@ public partial class PipelineGraph : GraphEdit
         AddValidConnectionType((int) PipelineNodeTypes.Mesh, (int) PipelineNodeTypes.Any);
 
         _popupMenu = GetNode<PopupMenu>(PopupMenu);
-        SceneModelNode = GD.Load<PackedScene>("res://addons/Pipelines/SceneModelNode.tscn");
-        OutputNode = GD.Load<PackedScene>("res://addons/Pipelines/OutputNode.tscn");
+        SceneModelNode = GD.Load<PackedScene>("res://addons/Pipelines/Nodes/SceneModelNode.tscn");
+        OutputNode = GD.Load<PackedScene>("res://addons/Pipelines/Nodes/OutputNode.tscn");
         ConnectionRequest += HandleConnectionRequest;
         DisconnectionRequest += HandleDisconnectionRequest;
         DeleteNodesRequest += HandleDeleteNodesRequest;
@@ -68,6 +69,10 @@ public partial class PipelineGraph : GraphEdit
         graphNode.PositionOffset = (LastMousePos+ScrollOffset)/Zoom;
     }
 
+    public IEnumerable<PipelineNode> GetNodes() {
+        return GetChildren().Where(c => c is PipelineNode).Select(c => (PipelineNode) c);
+    }
+
     private void HandleDisconnectionRequest(StringName fromNodeName, long fromPort, StringName toNodeName, long toPort)
     {
         DisconnectNode(fromNodeName, (int) fromPort, toNodeName, (int) toPort);
@@ -82,5 +87,54 @@ public partial class PipelineGraph : GraphEdit
         }
     }
 
+    public object GetData()
+    {
+        var nodes = GetNodes().Select(n => new PipelineNodeStore() {
+            Name = n.Name,
+            Type = n.GetType().Name,
+            X = n.PositionOffset.X,
+            Y = n.PositionOffset.Y,
+            Data = n.GetData()
+        });
+
+        var nodeConnections = GetConnectionList().Select(connection => new PipelineConnection() {
+            FromNodeName = (string) connection["from_node"],
+            FromPort = (int) connection["from_port"],
+            ToNodeName = (string) connection["to_node"],
+            ToPort = (int) connection["to_port"]
+        });
+
+        var pipelineContextStore = new PipelineContextStore() {
+            Nodes = nodes.ToList(),
+            Connections = nodeConnections.ToList()
+        };
+
+        return pipelineContextStore;
+    }
+
+    public void Load(object data)
+    {
+        if(data == null) {
+            return;
+        }
+
+        if(data is not PipelineContextStore pipelineContextStore) {
+            return;
+        }
+        
+        foreach(var pipelineNodeStore in pipelineContextStore.Nodes) {
+            var nodeResourcePath = $"res://addons/Pipelines/Nodes/{pipelineNodeStore.Type}.tscn";
+            var pipelineNode = GD.Load<PackedScene>(nodeResourcePath).Instantiate<PipelineNode>();
+
+            pipelineNode.Name = pipelineNodeStore.Name;
+            pipelineNode.Load(pipelineNodeStore.Data);
+            AddChild(pipelineNode);
+            pipelineNode.PositionOffset = new Vector2(pipelineNodeStore.X, pipelineNodeStore.Y);
+        }
+
+        foreach(var pipelineConnection in pipelineContextStore.Connections) {
+            ConnectNode(pipelineConnection.FromNodeName, pipelineConnection.FromPort, pipelineConnection.ToNodeName, pipelineConnection.ToPort);
+        }
+    }
 
 }

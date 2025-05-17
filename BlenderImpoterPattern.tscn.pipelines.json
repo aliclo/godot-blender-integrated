@@ -1,0 +1,1 @@
+{"Nodes":[{"Name":"OutputNode","Type":"OutputNode","X":480,"Y":-180,"Data":{"Destination":"test"}},{"Name":"SceneModelNode","Type":"SceneModelNode","X":-80,"Y":-240,"Data":{"ChosenScene":"res://Meshes/Side Tilt Platform Obstacle V2.blend","PhysicsOption":2}}],"Connections":[{"FromNodeName":"SceneModelNode","FromPort":1,"ToNodeName":"OutputNode","ToPort":0}]}
