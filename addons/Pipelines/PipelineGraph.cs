@@ -9,6 +9,8 @@ public partial class PipelineGraph : GraphEdit, IStorable
 
     [Export]
     public NodePath PopupMenu { get; set; }
+    public string ContextName { get; set; }
+
     private PopupMenu _popupMenu;
 
     private PackedScene SceneModelNode;
@@ -105,6 +107,7 @@ public partial class PipelineGraph : GraphEdit, IStorable
         });
 
         var pipelineContextStore = new PipelineContextStore() {
+            Name = ContextName,
             Nodes = nodes.ToList(),
             Connections = nodeConnections.ToList()
         };

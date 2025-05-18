@@ -38,3 +38,6 @@ Destination = []
 [node name="AnotherMeshOutput" type="Node" parent="PipeContext"]
 script = ExtResource("3_beaig")
 Destination = NodePath("")
+
+[node name="Another Context" type="Node" parent="."]
+script = ExtResource("1_6fvxv")

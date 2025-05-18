@@ -19,7 +19,7 @@ public partial class SceneModelNode : PipelineNode
     public override object GetData()
     {
         return new SceneModelNodeStore() {
-            ChosenScene = _sceneModelPicker.EditedResource.ResourcePath,
+            ChosenScene = _sceneModelPicker.EditedResource?.ResourcePath,
             PhysicsOption = _physicsBodyOption.GetSelectedId()
         };
     }
@@ -88,7 +88,11 @@ public partial class SceneModelNode : PipelineNode
         AddChild(_physicsBodyOption);
 
         if(_sceneModelNodeStore != null) {
-            _sceneModelPicker.EditedResource = GD.Load<Resource>(_sceneModelNodeStore.ChosenScene);
+            if (_sceneModelNodeStore.ChosenScene != null)
+            {
+                _sceneModelPicker.EditedResource = GD.Load<Resource>(_sceneModelNodeStore.ChosenScene);
+            }
+            
             _physicsBodyOption.Select(_sceneModelNodeStore.PhysicsOption);
         }
     }
