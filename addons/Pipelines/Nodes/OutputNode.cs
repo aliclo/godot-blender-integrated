@@ -1,39 +1,28 @@
 using Godot;
-using System;
-using System.Text.Json;
 
 [Tool]
 public partial class OutputNode : PipelineNode
 {
 
-    private class OutputNodeStore {
+    private partial class OutputNodeStore: GodotObject {
+        [Export]
         public string Destination { get; set; }
     }
 
     private OutputNodeStore _outputNodeStore;
     private TextEdit _outputNodePicker;
 
-    public override object GetData()
+    public override Variant GetData()
     {
-        return new OutputNodeStore()
+        return GodotJsonParser.ToJsonType(new OutputNodeStore()
         {
             Destination = _outputNodePicker.Text
-        };
+        }); 
     }
 
-    public override void Load(object data)
+    public override void Load(Variant data)
     {
-        if(data == null) {
-            return;
-        }
-
-        if(data is not JsonElement jsonElement) {
-            return;
-        }
-
-        var outputNodeStore = jsonElement.Deserialize<OutputNodeStore>();
-
-        _outputNodeStore = outputNodeStore;
+        _outputNodeStore = GodotJsonParser.FromJsonType<OutputNodeStore>(data);
     }
 
 

@@ -1,10 +1,9 @@
 using Godot;
-using System;
 
 public abstract partial class PipelineNode : GraphNode, IStorable
 {
-    public abstract object GetData();
+    public abstract Variant GetData();
 
-    public abstract void Load(object data);
+    public abstract void Load(Variant data);
 
 }

@@ -1,8 +1,12 @@
-using System.Collections.Generic;
+using Godot;
+using Godot.Collections;
 
-public class PipelineContextStore
+public partial class PipelineContextStore: GodotObject
 {
+    [Export]
     public string Name { get; set; }
-    public IList<PipelineNodeStore> Nodes { get; set; }
-    public IList<PipelineConnection> Connections { get; set; }
+    [Export]
+    public Array<PipelineNodeStore> Nodes { get; set; }
+    [Export]
+    public Array<PipelineConnection> Connections { get; set; }
 }

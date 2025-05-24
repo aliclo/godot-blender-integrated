@@ -1,14 +1,14 @@
 using Godot;
-using System;
 using System.Collections.Generic;
-using System.Text.Json;
 
 [Tool]
 public partial class SceneModelNode : PipelineNode
 {
 
-    private class SceneModelNodeStore {
+    private partial class SceneModelNodeStore : GodotObject {
+        [Export]
         public string ChosenScene { get; set; }
+        [Export]
         public int PhysicsOption { get; set; }
     }
 
@@ -16,27 +16,17 @@ public partial class SceneModelNode : PipelineNode
     private OptionButton _physicsBodyOption;
     private SceneModelNodeStore _sceneModelNodeStore;
 
-    public override object GetData()
+    public override Variant GetData()
     {
-        return new SceneModelNodeStore() {
+        return GodotJsonParser.ToJsonType(new SceneModelNodeStore() {
             ChosenScene = _sceneModelPicker.EditedResource?.ResourcePath,
             PhysicsOption = _physicsBodyOption.GetSelectedId()
-        };
+        });
     }
 
-    public override void Load(object data)
+    public override void Load(Variant data)
     {
-        if(data == null) {
-            return;
-        }
-
-        if(data is not JsonElement jsonElement) {
-            return;
-        }
-
-        var sceneModelNodeStore = jsonElement.Deserialize<SceneModelNodeStore>();
-
-        _sceneModelNodeStore = sceneModelNodeStore;
+        _sceneModelNodeStore = GodotJsonParser.FromJsonType<SceneModelNodeStore>(data);
     }
 
     public override void _Ready()

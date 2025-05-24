@@ -1,7 +1,9 @@
+using Godot;
+
 public interface IStorable {
 
-    public object GetData();
+    public Variant GetData();
 
-    public void Load(object data);
+    public void Load(Variant data);
 
 }
