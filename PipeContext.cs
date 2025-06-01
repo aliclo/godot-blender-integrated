@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using Godot.Collections;
 
 [Tool]
 public partial class PipeContext : Node {
@@ -13,9 +14,13 @@ public partial class PipeContext : Node {
     }
 
     public Node RootNode => this;
-    public List<NodeOutput> OrderOfCreation { get; set; }
-    public Dictionary<string, object> ContextData { get; set; }
+    public List<OutputNode> OrderOfCreation { get; set; }
+    public System.Collections.Generic.Dictionary<string, object> ContextData { get; set; }
+    public System.Collections.Generic.Dictionary<string, PipelineNode> PipelineNodeDict => _pipelineNodeDict;
 
+    private readonly PipelineAccess _pipelineAccess = new PipelineAccess();
+    private readonly PipeMapper _pipeMapper = new PipeMapper();
+    private System.Collections.Generic.Dictionary<string, PipelineNode> _pipelineNodeDict = new System.Collections.Generic.Dictionary<string, PipelineNode>();
     private List<NodePipes> _nodePipesList;
     private bool _completedFirstImport = false;
 
@@ -24,13 +29,76 @@ public partial class PipeContext : Node {
         Owner.Ready += () => {
             GD.Print("Ready!!");
 
+            var pipelineContextStores = _pipelineAccess.Read(Owner.SceneFilePath);
+            var pipelineContextStore = pipelineContextStores?.SingleOrDefault(pcs => pcs.Name == Name);
+            if (pipelineContextStore != null)
+            {
+                AddNodesAndConnections(pipelineContextStore);   
+            }
+
             Process();
             _completedFirstImport = true;
         };
     }
 
-    public void Reprocess() {
-        if(_completedFirstImport) {
+    public void AddNodesAndConnections(PipelineContextStore pipelineContextStore)
+    {
+        foreach (var pipelineNodeStore in pipelineContextStore.Nodes)
+        {
+            var nodeResourcePath = $"res://addons/Pipelines/Nodes/{pipelineNodeStore.Type}.tscn";
+            var pipelineNode = GD.Load<PackedScene>(nodeResourcePath).Instantiate<PipelineNode>();
+
+            pipelineNode.Name = pipelineNodeStore.Name;
+            pipelineNode.Load(pipelineNodeStore.Data);
+            pipelineNode.Init(this);
+            pipelineNode.PositionOffset = new Vector2(pipelineNodeStore.X, pipelineNodeStore.Y);
+            _pipelineNodeDict[pipelineNode.Name] = pipelineNode;
+        }
+
+        foreach (var pipelineConnection in pipelineContextStore.Connections)
+        {
+            var inputNode = _pipelineNodeDict[pipelineConnection.FromNodeName];
+            var toNode = _pipelineNodeDict[pipelineConnection.ToNodeName];
+
+            if (toNode is not IReceivePipe receiveNode)
+            {
+                GD.PrintErr("Node ", toNode.Name, " is not a receive node and cannot be connected to ", inputNode.Name);
+                continue;
+            }
+
+            inputNode.AddConnection(pipelineConnection.FromPort, new List<IReceivePipe>() { receiveNode });
+        }
+    }
+
+    public Variant GetData()
+    {
+        var nodes = _pipelineNodeDict.Values.Select(_pipeMapper.Map);
+
+        // Eventually we can support receiver nodes with multiple input ports
+        var nodeConnections = _pipelineNodeDict.Values.Select(n => n.NodeConnections.Select((pc, pi) => pc.Select(c => new PipelineConnectionStore()
+        {
+            FromNodeName = n.Name,
+            FromPort = pi,
+            ToNodeName = c.Name,
+            ToPort = 0
+        })))
+        .SelectMany(nc => nc)
+        .SelectMany(pc => pc);
+
+        var pipelineContextStore = new PipelineContextStore()
+        {
+            Name = Name,
+            Nodes = new Array<PipelineNodeStore>(nodes),
+            Connections = new Array<PipelineConnectionStore>(nodeConnections)
+        };
+
+        return pipelineContextStore;
+    }
+
+    public void Reprocess()
+    {
+        if (_completedFirstImport)
+        {
             Process();
         }
     }
@@ -41,7 +109,7 @@ public partial class PipeContext : Node {
 
     public void ReprocessPipe(List<ValuePipe> valuePipes) {
         foreach(var valuePipe in valuePipes) {
-            valuePipe.Pipe.Init();
+            valuePipe.Pipe.PreRegistration();
         }
 
         var nodePipes = new List<NodePipes>();
@@ -145,19 +213,11 @@ public partial class PipeContext : Node {
     }
 
     private void Process() {
-        var allDescendents = new List<Node>();
-        var children = GetChildren().ToList();
-
-        while(children.Any()) {
-            allDescendents.AddRange(children);
-            children = children.SelectMany(c => c.GetChildren()).ToList();
-        }
-        
-        var inputPipes = allDescendents
+        var inputPipes = _pipelineNodeDict.Values
             .Where(n => n is IInputPipe)
             .Select(n => (IInputPipe) n);
 
-        OrderOfCreation = new List<NodeOutput>();
+        OrderOfCreation = new List<OutputNode>();
         ContextData = new System.Collections.Generic.Dictionary<string, object>();
         _nodePipesList = new List<NodePipes>();
 
@@ -167,7 +227,7 @@ public partial class PipeContext : Node {
 
         foreach(var pipeList in _nodePipesList) {
             foreach(var pipe in pipeList.Pipes) {
-                pipe.Init();
+                pipe.PreRegistration();
             }
         }
 

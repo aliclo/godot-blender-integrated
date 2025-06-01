@@ -1,42 +1,28 @@
 using System.Collections.Generic;
 using System.Linq;
-using Godot;
-using Godot.Collections;
 
-public class DestinationHelper {
-    
-    public void HandleDestinationChange(DestinationPropertyInfo destinationPropertyInfo)
+public class DestinationHelper
+{
+
+    public void AddReceivePipes(PipeContext pipeContext, string destinationNodeName, IList<IReceivePipe> receiversToAdd, ICloneableValue cloneableValue)
     {
-        PipeContext pipeContext = destinationPropertyInfo.PipeContext;
-        Node node = destinationPropertyInfo.Node;
-        string destinationNodeName = destinationPropertyInfo.DestinationNodeName;
-        Array<NodePath> previousDestinationPaths = destinationPropertyInfo.PreviousDestinationPaths;
-        Array<NodePath> newDestinationPaths = destinationPropertyInfo.NewDestinationPaths;
-        ICloneableValue cloneableValue = destinationPropertyInfo.CloneableValue;
-
-        var destinationPipesPathsToRemove = previousDestinationPaths.Except(newDestinationPaths);
-        var destinationPipesToRemove = destinationPipesPathsToRemove.Select(p => node.GetNodeOrNull<IReceivePipe>(p)).Where(p => p != null);
-
-        foreach(var destinationPipeToRemove in destinationPipesToRemove) {
-            destinationPipeToRemove.PipeDisconnect();
+        foreach (var receiver in receiversToAdd)
+        {
+            receiver.Register(destinationNodeName);
         }
 
-        if(!node.IsNodeReady()) {
-            return;
+        if (cloneableValue != null)
+        {
+            var valuePipes = receiversToAdd.Select(p => new ValuePipe() { Pipe = p, CloneableValue = cloneableValue }).ToList();
+            pipeContext.ReprocessPipe(valuePipes);
         }
+    }
 
-        if(pipeContext != null) {
-            var destinationPipesPathsToAdd = newDestinationPaths.Except(previousDestinationPaths);
-            var destinationPipesToAdd = destinationPipesPathsToAdd.Select(p => node.GetNodeOrNull<IReceivePipe>(p)).Where(p => p != null);
-
-            foreach(var destinationPipeToAdd in destinationPipesToAdd) {
-                destinationPipeToAdd.Register(pipeContext, destinationNodeName);
-            }
-
-            if(cloneableValue != null) {
-                var valuePipes = destinationPipesToAdd.Select(p => new ValuePipe() { Pipe = p, CloneableValue = cloneableValue}).ToList();
-                pipeContext.ReprocessPipe(valuePipes);
-            }
+    public void RemoveReceivePipes(IList<IReceivePipe> receiversToRemove)
+    {
+        foreach (var receiver in receiversToRemove)
+        {
+            receiver.PipeDisconnect();
         }
     }
 

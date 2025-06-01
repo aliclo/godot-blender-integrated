@@ -10,11 +10,13 @@ public partial class PipelineGraph : GraphEdit
     [Export]
     public NodePath PopupMenu { get; set; }
     public EditorUndoRedoManager UndoRedo { get; set; }
-    public string ContextName { get; set; }
 
+    private readonly PipeMapper _pipeMapper = new PipeMapper();
+    private PipeContext _context { get; set; }
     private PopupMenu _popupMenu;
 
     private PackedScene _sceneModelNode;
+    private PackedScene _edgifyModelNode;
     private PackedScene _outputNode;
     private Vector2 _lastMousePos = Vector2.Zero;
 
@@ -24,31 +26,67 @@ public partial class PipelineGraph : GraphEdit
 
         _popupMenu = GetNode<PopupMenu>(PopupMenu);
         _sceneModelNode = GD.Load<PackedScene>("res://addons/Pipelines/Nodes/SceneModelNode.tscn");
+        _edgifyModelNode = GD.Load<PackedScene>("res://addons/Pipelines/Nodes/EdgifyNode.tscn");
         _outputNode = GD.Load<PackedScene>("res://addons/Pipelines/Nodes/OutputNode.tscn");
         ConnectionRequest += HandleConnectionRequest;
         DisconnectionRequest += HandleDisconnectionRequest;
         DeleteNodesRequest += HandleDeleteNodesRequest;
     }
 
-    public override void _Input(InputEvent @event)
+    public void OnLoadContext(PipeContext pipeContext)
     {
-        if(@event is InputEventMouseButton inputMouseButton && inputMouseButton.IsPressed() && inputMouseButton.ButtonIndex == MouseButton.Right) {
-            var mousePos = GetGlobalMousePosition();
-            _lastMousePos = GetLocalMousePosition();
-            _popupMenu.Popup(new Rect2I((int) mousePos.X, (int) mousePos.Y, _popupMenu.Size.X, _popupMenu.Size.Y));
+        _context = pipeContext;
+        foreach (var pipelineNode in _context.PipelineNodeDict.Values)
+        {
+            AddChild(pipelineNode);
+            for (int index = 0; index < pipelineNode.NodeConnections.Count; index++)
+            {
+                var portConnections = pipelineNode.NodeConnections[index];
+                foreach (var portConnection in portConnections)
+                {
+                    // Eventually we can support receiver nodes with multiple input ports
+                    ConnectNode(pipelineNode.Name, index, portConnection.Name, 0);
+                }
+            }
         }
     }
 
-    public void HandleConnectionRequest(StringName fromNodeName, long fromPort, StringName toNodeName, long toPort) {
-        var connected = GetConnectionList().SingleOrDefault(c => (string) c["to_node"] == toNodeName && (long) c["to_port"] == toPort);
+    public void Cleanup()
+    {
+        var existingConnections = GetConnectionList().Select(_pipeMapper.Map);
+        foreach (var connection in existingConnections)
+        {
+            DisconnectNode(connection.FromNodeName, connection.FromPort, connection.ToNodeName, connection.ToPort);
+        }
+
+        foreach (var pipelineNode in _context.PipelineNodeDict.Values)
+        {
+            RemoveChild(pipelineNode);
+            pipelineNode.Owner = null;
+        }
+    }
+
+    public override void _Input(InputEvent @event)
+    {
+        if (@event is InputEventMouseButton inputMouseButton && inputMouseButton.IsPressed() && inputMouseButton.ButtonIndex == MouseButton.Right)
+        {
+            var mousePos = GetGlobalMousePosition();
+            _lastMousePos = GetLocalMousePosition();
+            _popupMenu.Popup(new Rect2I((int)mousePos.X, (int)mousePos.Y, _popupMenu.Size.X, _popupMenu.Size.Y));
+        }
+    }
+
+    public void HandleConnectionRequest(StringName fromNodeName, long fromPort, StringName toNodeName, long toPort)
+    {
+        var connected = GetConnectionList().SingleOrDefault(c => (string)c["to_node"] == toNodeName && (long)c["to_port"] == toPort);
 
         if (connected == null)
         {
             UndoRedo.CreateAction($"Connect {fromNodeName} to {toNodeName}");
 
-            UndoRedo.AddDoMethod(this, GraphEdit.MethodName.ConnectNode, fromNodeName, fromPort, toNodeName, toPort);
+            UndoRedo.AddDoMethod(this, MethodName.ConnectPipelineNode, fromNodeName, fromPort, toNodeName, toPort);
 
-            UndoRedo.AddUndoMethod(this, GraphEdit.MethodName.DisconnectNode, fromNodeName, fromPort, toNodeName, toPort);
+            UndoRedo.AddUndoMethod(this, MethodName.DisconnectPipelineNode, fromNodeName, fromPort, toNodeName, toPort);
 
             UndoRedo.CommitAction();
         }
@@ -68,8 +106,36 @@ public partial class PipelineGraph : GraphEdit
 
     private void ReplaceNodeConnection(string oldFromNodeName, int oldFromPort, string newFromNodeName, int newFromPort, string toNodeName, int toPort)
     {
-        DisconnectNode(oldFromNodeName, oldFromPort, toNodeName, toPort);
-        ConnectNode(newFromNodeName, newFromPort, toNodeName, toPort);
+        DisconnectPipelineNode(oldFromNodeName, oldFromPort, toNodeName, toPort);
+        ConnectPipelineNode(newFromNodeName, newFromPort, toNodeName, toPort);
+    }
+
+    private void ConnectPipelineNode(string fromNodeName, int fromPort, string toNodeName, int toPort)
+    {
+        var fromNode = _context.PipelineNodeDict[fromNodeName];
+        var toNode = _context.PipelineNodeDict[toNodeName];
+
+        if (toNode is not IReceivePipe receivePipe)
+        {
+            return;
+        }
+
+        ConnectNode(fromNode.Name, fromPort, toNode.Name, toPort);
+        fromNode.Connect(fromPort, new List<IReceivePipe>() { receivePipe });
+    }
+
+    private void DisconnectPipelineNode(string fromNodeName, int fromPort, string toNodeName, int toPort)
+    {
+        var fromNode = _context.PipelineNodeDict[fromNodeName];
+        var toNode = _context.PipelineNodeDict[toNodeName];
+
+        if (toNode is not IReceivePipe receivePipe)
+        {
+            return;
+        }
+
+        DisconnectNode(fromNode.Name, fromPort, toNode.Name, toPort);
+        fromNode.Disconnect(fromPort, new List<IReceivePipe>() { receivePipe });
     }
 
     public void RightClickMenuChosen(int id)
@@ -81,6 +147,9 @@ public partial class PipelineGraph : GraphEdit
             case (int)RightClickMenuItems.AddSceneModelNode:
                 packedSceneToCreate = _sceneModelNode;
                 break;
+            case (int)RightClickMenuItems.AddEdgifyNode:
+                packedSceneToCreate = _edgifyModelNode;
+                break;
             case (int)RightClickMenuItems.AddOutputNode:
                 packedSceneToCreate = _outputNode;
                 break;
@@ -91,27 +160,35 @@ public partial class PipelineGraph : GraphEdit
             return;
         }
 
-        var graphNode = packedSceneToCreate.Instantiate<GraphNode>();
+        var graphNode = packedSceneToCreate.Instantiate<PipelineNode>();
         graphNode.PositionOffset = (_lastMousePos + ScrollOffset) / Zoom;
+        graphNode.Init(_context);
 
         UndoRedo.CreateAction($"Add {graphNode.GetType().Name} node");
-        UndoRedo.AddDoMethod(this, Node.MethodName.AddChild, graphNode);
-        UndoRedo.AddUndoMethod(this, Node.MethodName.RemoveChild, graphNode);
+        UndoRedo.AddDoMethod(this, MethodName.AddPipelineNode, graphNode);
+        UndoRedo.AddUndoMethod(this, MethodName.RemovePipelineNode, graphNode);
         UndoRedo.CommitAction();
     }
 
-    public IEnumerable<PipelineNode> GetNodes()
+    public void AddPipelineNode(PipelineNode pipelineNode)
     {
-        return GetChildren().Where(c => c is PipelineNode).Select(c => (PipelineNode)c);
+        AddChild(pipelineNode);
+        _context.PipelineNodeDict[pipelineNode.Name] = pipelineNode;
+    }
+
+    public void RemovePipelineNode(PipelineNode pipelineNode)
+    {
+        RemoveChild(pipelineNode);
+        _context.PipelineNodeDict.Remove(pipelineNode.Name);
     }
 
     private void HandleDisconnectionRequest(StringName fromNodeName, long fromPort, StringName toNodeName, long toPort)
     {
         UndoRedo.CreateAction($"Disconnect {fromNodeName} from {toNodeName}");
 
-        UndoRedo.AddDoMethod(this, GraphEdit.MethodName.DisconnectNode, fromNodeName, fromPort, toNodeName, toPort);
+        UndoRedo.AddDoMethod(this, MethodName.DisconnectPipelineNode, fromNodeName, fromPort, toNodeName, toPort);
 
-        UndoRedo.AddUndoMethod(this, GraphEdit.MethodName.ConnectNode, fromNodeName, fromPort, toNodeName, toPort);
+        UndoRedo.AddUndoMethod(this, MethodName.ConnectPipelineNode, fromNodeName, fromPort, toNodeName, toPort);
 
         UndoRedo.CommitAction();
     }
@@ -119,13 +196,13 @@ public partial class PipelineGraph : GraphEdit
     private void HandleDeleteNodesRequest(Array nodeNames)
     {
         var nodes = new Array<PipelineNode>(nodeNames
-            .Select(name => GetNode<PipelineNode>(new NodePath((StringName)name))));
+            .Select(name => _context.PipelineNodeDict[(string)name]));
 
         var nodeStore = new Array<PipelineNodeStore>(nodes
-            .Select(Map));
+            .Select(_pipeMapper.Map));
 
-        var connections = new Array<PipelineConnection>(GetConnectionList()
-            .Select(Map)
+        var connections = new Array<PipelineConnectionStore>(GetConnectionList()
+            .Select(_pipeMapper.Map)
             .Where(c => nodeNames.Contains(c.FromNodeName) || nodeNames.Contains(c.ToNodeName)));
 
         var pipelineContextStore = new PipelineContextStore()
@@ -144,82 +221,15 @@ public partial class PipelineGraph : GraphEdit
     {
         foreach (var node in nodes)
         {
+            _context.PipelineNodeDict.Remove(node.Name);
             RemoveChild(node);
             node.QueueFree();
         }
     }
-    
+
     private void AddNodesAndConnections(PipelineContextStore pipelineContextStore)
     {
-        foreach (var pipelineNodeStore in pipelineContextStore.Nodes)
-        {
-            var nodeResourcePath = $"res://addons/Pipelines/Nodes/{pipelineNodeStore.Type}.tscn";
-            var pipelineNode = GD.Load<PackedScene>(nodeResourcePath).Instantiate<PipelineNode>();
-
-            pipelineNode.Name = pipelineNodeStore.Name;
-            pipelineNode.Load(pipelineNodeStore.Data);
-            AddChild(pipelineNode);
-            pipelineNode.PositionOffset = new Vector2(pipelineNodeStore.X, pipelineNodeStore.Y);
-        }
-
-        foreach (var pipelineConnection in pipelineContextStore.Connections)
-        {
-            ConnectNode(pipelineConnection.FromNodeName, pipelineConnection.FromPort, pipelineConnection.ToNodeName, pipelineConnection.ToPort);
-        }
-    }
-
-    public Variant GetData()
-    {
-        var nodes = GetNodes().Select(Map);
-
-        var nodeConnections = GetConnectionList().Select(Map);
-
-        var pipelineContextStore = new PipelineContextStore()
-        {
-            Name = ContextName,
-            Nodes = new Array<PipelineNodeStore>(nodes),
-            Connections = new Array<PipelineConnection>(nodeConnections)
-        };
-
-        return pipelineContextStore;
-    }
-
-    public PipelineNodeStore Map(PipelineNode pipelineNode)
-    {
-        return new PipelineNodeStore()
-        {
-            Name = pipelineNode.Name,
-            Type = pipelineNode.GetType().Name,
-            X = pipelineNode.PositionOffset.X,
-            Y = pipelineNode.PositionOffset.Y,
-            Data = pipelineNode.GetData()
-        };
-    }
-
-    public PipelineConnection Map(Dictionary connection)
-    {
-        return new PipelineConnection()
-        {
-            FromNodeName = (string)connection["from_node"],
-            FromPort = (int)connection["from_port"],
-            ToNodeName = (string)connection["to_node"],
-            ToPort = (int)connection["to_port"]
-        };
-    }
-
-    public void Load(object data)
-    {
-        if (data == null)
-        {
-            return;
-        }
-
-        if (data is not PipelineContextStore pipelineContextStore)
-        {
-            return;
-        }
-
-        AddNodesAndConnections(pipelineContextStore);
+        _context.AddNodesAndConnections(pipelineContextStore);
     }
 
 }

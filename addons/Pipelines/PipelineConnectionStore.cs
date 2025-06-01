@@ -1,6 +1,6 @@
 using Godot;
 
-public partial class PipelineConnection: GodotObject {
+public partial class PipelineConnectionStore: GodotObject {
     [Export]
     public string FromNodeName { get; set; }
     [Export]

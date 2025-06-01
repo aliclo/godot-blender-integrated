@@ -21,4 +21,4 @@ project/assembly_name="BlenderImporterPlus"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/Pipelines/plugin.cfg")
+enabled=PackedStringArray("res://addons/NumericLineEdit/plugin.cfg", "res://addons/Pipelines/plugin.cfg")

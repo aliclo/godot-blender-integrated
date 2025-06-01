@@ -28,11 +28,11 @@ public class PipelineAccess
         return model;
     }
 
-    public void Write(string sceneFilePath, PipelineGraph pipelineEditor)
+    public void Write(string sceneFilePath, PipeContext pipelineContext)
     {
         string filePath = $"{sceneFilePath}.pipelines.json";
 
-        var pipelineContextStore = (PipelineContextStore)pipelineEditor.GetData();
+        var pipelineContextStore = (PipelineContextStore)pipelineContext.GetData();
 
         var pipelineContextStores = Read(sceneFilePath);
 
@@ -42,9 +42,10 @@ public class PipelineAccess
         }
         else
         {
-            foreach (var contextStore in pipelineContextStores.Where(pcs => pcs.Name == pipelineContextStore.Name))
+            var oldPipelineContextStore = pipelineContextStores.SingleOrDefault(pcs => pcs.Name == pipelineContextStore.Name);
+            if (oldPipelineContextStore != null)
             {
-                pipelineContextStores.Remove(contextStore);
+                pipelineContextStores.Remove(oldPipelineContextStore);
             }
         }
 

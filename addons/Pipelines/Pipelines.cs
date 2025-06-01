@@ -7,8 +7,7 @@ public partial class Pipelines : EditorPlugin
 {
 
 	private PipelineEditor _pipelineEditor;
-	private string _pipelineContextPath;
-	private string _pipelineContextName;
+	private PipeContext _context;
 	private EditorSelection _selection;
 	private PipelineAccess _pipelineAccess = new PipelineAccess();
 
@@ -27,15 +26,15 @@ public partial class Pipelines : EditorPlugin
 		SceneSaved -= OnSave;
 		_selection.SelectionChanged -= OnSelectionChanged;
 		if(_pipelineEditor != null) {
-			ClearPipelineGraph();
+			ClearContextAndPipelineGraph();
 		}
 	}
 
 	public void OnSave(string filePath)
 	{
-		if (filePath == _pipelineContextPath)
+		if (_context != null && filePath == _context.Owner.SceneFilePath)
 		{
-			_pipelineAccess.Write(_pipelineContextPath, _pipelineEditor.PipelineGraph);
+			_pipelineAccess.Write(_context.Owner.SceneFilePath, _context);
 		}
 	}
 
@@ -43,16 +42,16 @@ public partial class Pipelines : EditorPlugin
 	{
 		if (_pipelineEditor != null)
 		{
-			ClearPipelineGraph();
+			ClearContextAndPipelineGraph();
 		}
 
 		var selectedNodes = _selection.GetSelectedNodes();
-		var pipelineContext = selectedNodes.FirstOrDefault(n => n is PipeContext);
+		var pipelineContext = (PipeContext) selectedNodes.FirstOrDefault(n => n is PipeContext);
 
 		if (pipelineContext != null)
 		{
-			_pipelineContextPath = pipelineContext.Owner.SceneFilePath;
-			_pipelineContextName = pipelineContext.Name;
+			_context = pipelineContext;
+			_context.TreeExiting += ClearContextAndPipelineGraph;
 			_pipelineEditor = GD.Load<PackedScene>("res://addons/Pipelines/PipelineEditor.tscn").Instantiate<PipelineEditor>();
 
 			_pipelineEditor.Ready += InitPipelineEditor;
@@ -61,22 +60,22 @@ public partial class Pipelines : EditorPlugin
 	}
 
 	private void InitPipelineEditor() {
-		var pipelineContextStores = _pipelineAccess.Read(_pipelineContextPath);
-		var pipelineContextStore = pipelineContextStores?.SingleOrDefault(pcs => pcs.Name == _pipelineContextName);
-		_pipelineEditor.PipelineGraph.Load(pipelineContextStore);
+		var pipelineContextStores = _pipelineAccess.Read(_context.Owner.SceneFilePath);
+		var pipelineContextStore = pipelineContextStores?.SingleOrDefault(pcs => pcs.Name == _context.Name);
 		_pipelineEditor.PipelineGraph.UndoRedo = GetUndoRedo();
-		_pipelineEditor.PipelineGraph.ContextName = _pipelineContextName;
+		_pipelineEditor.PipelineGraph.OnLoadContext(_context);
 		_pipelineEditor.Ready -= InitPipelineEditor;
 	}
 
-	private void ClearPipelineGraph()
+	private void ClearContextAndPipelineGraph()
 	{
-		_pipelineAccess.Write(_pipelineContextPath, _pipelineEditor.PipelineGraph);
+		_context.TreeExiting -= ClearContextAndPipelineGraph;
+		_pipelineAccess.Write(_context.Owner.SceneFilePath, _context);
+		_pipelineEditor.PipelineGraph.Cleanup();
 		RemoveControlFromBottomPanel(_pipelineEditor);
 		_pipelineEditor.QueueFree();
 		_pipelineEditor = null;
-		_pipelineContextPath = null;
-		_pipelineContextName = null;
+		_context = null;
 	}
 }
 #endif

@@ -8,5 +8,5 @@ public partial class PipelineContextStore: GodotObject
     [Export]
     public Array<PipelineNodeStore> Nodes { get; set; }
     [Export]
-    public Array<PipelineConnection> Connections { get; set; }
+    public Array<PipelineConnectionStore> Connections { get; set; }
 }
