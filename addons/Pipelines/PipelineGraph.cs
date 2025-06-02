@@ -66,7 +66,7 @@ public partial class PipelineGraph : GraphEdit
         }
     }
 
-    public override void _Input(InputEvent @event)
+    public override void _GuiInput(InputEvent @event)
     {
         if (@event is InputEventMouseButton inputMouseButton && inputMouseButton.IsPressed() && inputMouseButton.ButtonIndex == MouseButton.Right)
         {
