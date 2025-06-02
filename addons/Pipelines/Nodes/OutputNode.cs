@@ -55,6 +55,7 @@ public partial class OutputNode : PipelineNode, IReceivePipe
 
     private NodePath _destination;
     private string _nodeName;
+    private Node _node;
     private List<Node> _previousNodeChildren;
     private List<NodeProp> _previousNodeProps;
 
@@ -135,10 +136,10 @@ public partial class OutputNode : PipelineNode, IReceivePipe
     {
         _nodeName = nodeName;
 
-        var node = _context.RootNode.GetNodeOrNull(_destination + "/" + nodeName);
-        if (node != null)
+        _node = _context.RootNode.GetNodeOrNull(_destination + "/" + nodeName);
+        if (_node != null)
         {
-            GetPreviousNodeValues(node);
+            GetPreviousNodeValues(_node);
         }
 
         HashSet<OutputNode> outputNodes;
@@ -160,14 +161,16 @@ public partial class OutputNode : PipelineNode, IReceivePipe
     public PipeValue Pipe(PipeValue pipeValue)
     {
         var obj = pipeValue.Value;
-        if(obj is not Node) {
+        if(obj is not Node node) {
             return null;
         }
 
-        var node = (Node) obj;
+        _node = node;
 
-        if(_previousNodeProps != null) {
-            foreach(var prop in _previousNodeProps.Where(p => !pipeValue.TouchedProperties.Contains(p.Name))) {
+        if (_previousNodeProps != null)
+        {
+            foreach (var prop in _previousNodeProps.Where(p => !pipeValue.TouchedProperties.Contains(p.Name)))
+            {
                 node.Set(prop.Name, prop.Value);
             }
         }
@@ -211,18 +214,15 @@ public partial class OutputNode : PipelineNode, IReceivePipe
 
     public void Clean()
     {
-        if (_destination != null && !_destination.IsEmpty)
+        if (_node != null)
         {
-            var node = _context.RootNode.GetNodeOrNull(_destination + "/" + _nodeName);
-            if (node != null)
+            var nodeParent = _node.GetParent();
+            if (nodeParent != null)
             {
-                var nodeParent = node.GetParent();
-                if (nodeParent != null)
-                {
-                    nodeParent.RemoveChild(node);
-                }
-                node.QueueFree();
+                nodeParent.RemoveChild(_node);
             }
+            _node.QueueFree();
+            _node = null;
         }
     }
 
@@ -237,36 +237,25 @@ public partial class OutputNode : PipelineNode, IReceivePipe
 
     private void OutputNodeChanged()
     {
-        Node node = null;
-        if (_destination != null && !_destination.IsEmpty)
+        if (_node != null)
         {
-            node = _context.RootNode.GetNodeOrNull(_destination + "/" + _nodeName);;
-            if (node != null)
+            var nodeParent = _node.GetParent();
+            if (nodeParent != null)
             {
-                var nodeParent = node.GetParent();
-                if (nodeParent != null)
-                {
-                    nodeParent.RemoveChild(node);
-                }
+                nodeParent.RemoveChild(_node);
             }
         }
 
         _destination = _outputNodePicker.Text;
 
-        if (!IsNodeReady())
-        {
-            return;
-        }
-
         var parentNodePath = _destination;
 
-        if (!parentNodePath.IsEmpty && node != null)
+        if (!parentNodePath.IsEmpty && _node != null)
         {
             var parentNode = _context.RootNode.GetNode(parentNodePath);
-            parentNode.AddChild(node);
+            parentNode.AddChild(_node);
             var owner = _context.RootNode?.Owner ?? _context.RootNode;
-            node.Owner = owner;
-            // _mesh = mesh;
+            _node.Owner = owner;
             SetOrder();
         }
     }
