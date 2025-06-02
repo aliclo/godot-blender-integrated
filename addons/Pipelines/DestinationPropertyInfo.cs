@@ -7,5 +7,5 @@ public class DestinationPropertyInfo {
     public string DestinationNodeName { get; set; }
     public Array<NodePath> PreviousDestinationPaths { get; set; }
     public Array<NodePath> NewDestinationPaths { get; set; }
-    public ICloneableValue CloneableValue { get; set; }
+    public ICloneablePipeValue CloneableValue { get; set; }
 }

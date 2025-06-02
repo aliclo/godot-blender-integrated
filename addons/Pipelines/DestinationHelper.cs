@@ -4,7 +4,7 @@ using System.Linq;
 public class DestinationHelper
 {
 
-    public void AddReceivePipes(PipeContext pipeContext, string destinationNodeName, IList<IReceivePipe> receiversToAdd, ICloneableValue cloneableValue)
+    public void AddReceivePipes(PipeContext pipeContext, string destinationNodeName, IList<IReceivePipe> receiversToAdd, ICloneablePipeValue cloneableValue)
     {
         foreach (var receiver in receiversToAdd)
         {
@@ -13,7 +13,7 @@ public class DestinationHelper
 
         if (cloneableValue != null)
         {
-            var valuePipes = receiversToAdd.Select(p => new ValuePipe() { Pipe = p, CloneableValue = cloneableValue }).ToList();
+            var valuePipes = receiversToAdd.Select(p => new ValuePipe() { Pipe = p, CloneablePipeValue = cloneableValue }).ToList();
             pipeContext.ReprocessPipe(valuePipes);
         }
     }

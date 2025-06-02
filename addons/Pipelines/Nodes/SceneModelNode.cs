@@ -51,6 +51,11 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
     private static readonly NodePath CollisionShape3DPath = new NodePath(COLLISION_SHAPE_3D_NAME);
     private static readonly NodePath AnimationPlayerPath = new NodePath(ANIMATION_PLAYER_NAME);
 
+    // TODO: Use this from the context instead of having to provide it to the context
+    private static readonly List<string> TOUCHED_PROPERTIES = new List<string>() {
+        nameof(MeshInstance3D.Mesh).ToLower()
+    };
+
     private PipeContext _context;
     private EditorResourcePicker _sceneModelPicker;
     private OptionButton _physicsBodyOption;
@@ -169,7 +174,8 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         _meshPipes.AddRange(receivePipes);
 
         var destinationHelper = new DestinationHelper();
-        destinationHelper.AddReceivePipes(_context, MESH_INSTANCE_3D_NAME, receivePipes, blendNodes?.Mesh == null ? null : new CloneableNode() { Node = blendNodes.Mesh });
+        var pipeValue = blendNodes?.Mesh == null ? null : new PipeValue() { Value = blendNodes.Mesh, TouchedProperties = TOUCHED_PROPERTIES };
+        destinationHelper.AddReceivePipes(_context, MESH_INSTANCE_3D_NAME, receivePipes, blendNodes?.Mesh == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
     }
 
     private void DisconnectMesh(IList<IReceivePipe> receivePipes)
@@ -196,7 +202,8 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         _physicsBodyPipes.AddRange(receivePipes);
 
         var destinationHelper = new DestinationHelper();
-        destinationHelper.AddReceivePipes(_context, PHYSICS_BODY_3D_NAME, receivePipes, blendNodes?.PhysicsBody == null ? null : new CloneableNode() { Node = blendNodes.PhysicsBody });
+        var pipeValue = blendNodes?.PhysicsBody == null ? null : new PipeValue() { Value = blendNodes.PhysicsBody, TouchedProperties = TOUCHED_PROPERTIES };
+        destinationHelper.AddReceivePipes(_context, PHYSICS_BODY_3D_NAME, receivePipes, blendNodes?.PhysicsBody == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
     }
 
     private void DisconnectPhyisicsBody(IList<IReceivePipe> receivePipes)
@@ -223,7 +230,8 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         _collisionShapePipes.AddRange(receivePipes);
 
         var destinationHelper = new DestinationHelper();
-        destinationHelper.AddReceivePipes(_context, ANIMATION_PLAYER_NAME, receivePipes, blendNodes?.AnimationPlayer == null ? null : new CloneableNode() { Node = blendNodes.AnimationPlayer });
+        var pipeValue = blendNodes?.CollisionShape == null ? null : new PipeValue() { Value = blendNodes.CollisionShape, TouchedProperties = TOUCHED_PROPERTIES };
+        destinationHelper.AddReceivePipes(_context, ANIMATION_PLAYER_NAME, receivePipes, blendNodes?.CollisionShape == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
     }
 
     private void DisconnectCollisionShape(IList<IReceivePipe> receivePipes)
@@ -250,7 +258,8 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         _animationPlayerPipes.AddRange(receivePipes);
 
         var destinationHelper = new DestinationHelper();
-        destinationHelper.AddReceivePipes(_context, ANIMATION_PLAYER_NAME, receivePipes, blendNodes?.AnimationPlayer == null ? null : new CloneableNode() { Node = blendNodes.AnimationPlayer });
+        var pipeValue = blendNodes?.AnimationPlayer == null ? null : new PipeValue() { Value = blendNodes.AnimationPlayer, TouchedProperties = TOUCHED_PROPERTIES };
+        destinationHelper.AddReceivePipes(_context, ANIMATION_PLAYER_NAME, receivePipes, blendNodes?.AnimationPlayer == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
     }
 
     private void DisconnectAnimationPlayer(IList<IReceivePipe> receivePipes)
@@ -370,25 +379,29 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         foreach (var meshPipe in _meshPipes)
         {
             meshPipe.Register(MESH_INSTANCE_3D_NAME);
-            _context.RegisterPipe(new ValuePipe() { Pipe = meshPipe, CloneableValue = new CloneableNode() { Node = mesh } });
+            var pipeValue = new PipeValue() { Value = mesh, TouchedProperties = TOUCHED_PROPERTIES };
+            _context.RegisterPipe(new ValuePipe() { Pipe = meshPipe, CloneablePipeValue = new CloneablePipeValue() { PipeValue = pipeValue } });
         }
 
         foreach (var physicsBodyPipe in _physicsBodyPipes)
         {
             physicsBodyPipe.Register(PHYSICS_BODY_3D_NAME);
-            _context.RegisterPipe(new ValuePipe() { Pipe = physicsBodyPipe, CloneableValue = new CloneableNode() { Node = body } });
+            var pipeValue = new PipeValue() { Value = body, TouchedProperties = TOUCHED_PROPERTIES };
+            _context.RegisterPipe(new ValuePipe() { Pipe = physicsBodyPipe, CloneablePipeValue = new CloneablePipeValue() { PipeValue = pipeValue } });
         }
 
         foreach (var collisionShapePipe in _collisionShapePipes)
         {
             collisionShapePipe.Register(COLLISION_SHAPE_3D_NAME);
-            _context.RegisterPipe(new ValuePipe() { Pipe = collisionShapePipe, CloneableValue = new CloneableNode() { Node = collisionShape } });
+            var pipeValue = new PipeValue() { Value = collisionShape, TouchedProperties = TOUCHED_PROPERTIES };
+            _context.RegisterPipe(new ValuePipe() { Pipe = collisionShapePipe, CloneablePipeValue = new CloneablePipeValue() { PipeValue = pipeValue } });
         }
 
         foreach (var animationPlayerPipe in _animationPlayerPipes)
         {
             animationPlayerPipe.Register(ANIMATION_PLAYER_NAME);
-            _context.RegisterPipe(new ValuePipe() { Pipe = animationPlayerPipe, CloneableValue = new CloneableNode() { Node = animationPlayer } });
+            var pipeValue = new PipeValue() { Value = animationPlayer, TouchedProperties = TOUCHED_PROPERTIES };
+            _context.RegisterPipe(new ValuePipe() { Pipe = animationPlayerPipe, CloneablePipeValue = new CloneablePipeValue() { PipeValue = pipeValue } });
         }
     }
 

@@ -125,7 +125,7 @@ public partial class PipeContext : Node {
     private IEnumerable<NodePipes> GetNodePipes(ValuePipe valuePipe)
     {
         var pipe = valuePipe.Pipe;
-        var cloneableValue = valuePipe.CloneableValue;
+        var cloneablePipeValue = valuePipe.CloneablePipeValue;
 
         var processedPipes = new List<List<IReceivePipe>>();
         var nodePipes = new List<List<IReceivePipe>>() {new List<IReceivePipe>() { pipe }};
@@ -149,10 +149,7 @@ public partial class PipeContext : Node {
         } while (nodePipesWithNext.Any());
         
         return processedPipes.Select(p => new NodePipes(){
-            CurrentValue = new PipeValue() {
-                Value = cloneableValue.CloneValue(),
-                TouchedProperties = new List<string>()
-            },
+            CurrentValue = cloneablePipeValue.ClonePipeValue(),
             Pipes = p,
             CurrentProgress = 0
         });
