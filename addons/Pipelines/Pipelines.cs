@@ -6,6 +6,8 @@ using System.Linq;
 public partial class Pipelines : EditorPlugin
 {
 
+	private const string ADDON_PATH = "res://addons/Pipelines";
+
 	private PipelineEditor _pipelineEditor;
 	private PipeContext _context;
 	private EditorSelection _selection;
@@ -14,6 +16,9 @@ public partial class Pipelines : EditorPlugin
 	public override void _EnterTree()
 	{
 		// Initialization of the plugin goes here.
+		var pipeContextScript = GD.Load<CSharpScript>($"{ADDON_PATH}/{nameof(PipeContext)}.cs");
+		var pipeContextIcon = GD.Load<Texture2D>($"{ADDON_PATH}/{nameof(PipeContext)}.png");
+		AddCustomType(nameof(PipeContext), nameof(Node), pipeContextScript, pipeContextIcon);
 		_selection = EditorInterface.Singleton.GetSelection();
 		_selection.SelectionChanged += OnSelectionChanged;
 		SceneSaved += OnSave;
@@ -23,6 +28,7 @@ public partial class Pipelines : EditorPlugin
 	{
 		// Clean-up of the plugin goes here.
 		// TODO: Clear save history at this point
+		RemoveCustomType(nameof(PipeContext));
 		SceneSaved -= OnSave;
 		_selection.SelectionChanged -= OnSelectionChanged;
 		if(_pipelineEditor != null) {
@@ -52,7 +58,7 @@ public partial class Pipelines : EditorPlugin
 		{
 			_context = pipelineContext;
 			_context.TreeExiting += ClearContextAndPipelineGraph;
-			_pipelineEditor = GD.Load<PackedScene>("res://addons/Pipelines/PipelineEditor.tscn").Instantiate<PipelineEditor>();
+			_pipelineEditor = GD.Load<PackedScene>($"{ADDON_PATH}/PipelineEditor.tscn").Instantiate<PipelineEditor>();
 
 			_pipelineEditor.Ready += InitPipelineEditor;
 			AddControlToBottomPanel(_pipelineEditor, "Pipeline Graph");

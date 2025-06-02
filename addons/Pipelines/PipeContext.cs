@@ -26,19 +26,19 @@ public partial class PipeContext : Node {
 
     public override void _Ready()
     {
-        Owner.Ready += () => {
-            GD.Print("Ready!!");
+        // When adding this node, Owner is not set yet, so have to get it from parent
+        var owner = GetParent()?.Owner ?? this;
 
-            var pipelineContextStores = _pipelineAccess.Read(Owner.SceneFilePath);
-            var pipelineContextStore = pipelineContextStores?.SingleOrDefault(pcs => pcs.Name == Name);
-            if (pipelineContextStore != null)
-            {
-                AddNodesAndConnections(pipelineContextStore);   
-            }
-
-            Process();
-            _completedFirstImport = true;
-        };
+        if (owner.IsNodeReady())
+        {
+            Init(owner);
+        }
+        else
+        {
+            owner.Ready += () => {
+                Init(owner);
+            };
+        }
     }
 
     public void AddNodesAndConnections(PipelineContextStore pipelineContextStore)
@@ -212,21 +212,40 @@ public partial class PipeContext : Node {
         }
     }
 
-    private void Process() {
+    private void Init(Node owner)
+    {
+        GD.Print("Ready!!");
+
+        var pipelineContextStores = _pipelineAccess.Read(owner.SceneFilePath);
+        var pipelineContextStore = pipelineContextStores?.SingleOrDefault(pcs => pcs.Name == Name);
+        if (pipelineContextStore != null)
+        {
+            AddNodesAndConnections(pipelineContextStore);   
+        }
+
+        Process();
+        _completedFirstImport = true;
+    }
+
+    private void Process()
+    {
         var inputPipes = _pipelineNodeDict.Values
             .Where(n => n is IInputPipe)
-            .Select(n => (IInputPipe) n);
+            .Select(n => (IInputPipe)n);
 
         OrderOfCreation = new List<OutputNode>();
         ContextData = new System.Collections.Generic.Dictionary<string, object>();
         _nodePipesList = new List<NodePipes>();
 
-        foreach(var inputPipe in inputPipes) {
+        foreach (var inputPipe in inputPipes)
+        {
             inputPipe.Register();
         }
 
-        foreach(var pipeList in _nodePipesList) {
-            foreach(var pipe in pipeList.Pipes) {
+        foreach (var pipeList in _nodePipesList)
+        {
+            foreach (var pipe in pipeList.Pipes)
+            {
                 pipe.PreRegistration();
             }
         }
