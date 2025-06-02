@@ -161,6 +161,7 @@ public partial class PipelineGraph : GraphEdit
         }
 
         var graphNode = packedSceneToCreate.Instantiate<PipelineNode>();
+        graphNode.Name = EnsureUniqueNodeName(graphNode.Name);
         graphNode.PositionOffset = (_lastMousePos + ScrollOffset) / Zoom;
         graphNode.Init(_context);
 
@@ -180,6 +181,25 @@ public partial class PipelineGraph : GraphEdit
     {
         RemoveChild(pipelineNode);
         _context.PipelineNodeDict.Remove(pipelineNode.Name);
+    }
+
+    private string EnsureUniqueNodeName(string name)
+    {
+        if (GetNodeOrNull(name) == null)
+        {
+            return name;
+        }
+
+        int counter = 1;
+        string uniqueName;
+
+        do
+        {
+            uniqueName = name + counter;
+            counter++;
+        } while (GetNodeOrNull(uniqueName) != null);
+
+        return uniqueName;
     }
 
     private void HandleDisconnectionRequest(StringName fromNodeName, long fromPort, StringName toNodeName, long toPort)

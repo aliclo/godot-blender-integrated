@@ -26,19 +26,18 @@ public partial class PipeContext : Node {
 
     public override void _Ready()
     {
-        // When adding this node, Owner is not set yet, so have to get it from parent
-        var owner = GetParent()?.Owner ?? this;
+        GD.Print("Ready!!");
 
-        if (owner.IsNodeReady())
+        var sceneFilePath = GetTree().EditedSceneRoot.SceneFilePath;
+        var pipelineContextStores = _pipelineAccess.Read(sceneFilePath);
+        var pipelineContextStore = pipelineContextStores?.SingleOrDefault(pcs => pcs.Name == Name);
+        if (pipelineContextStore != null)
         {
-            Init(owner);
+            AddNodesAndConnections(pipelineContextStore);   
         }
-        else
-        {
-            owner.Ready += () => {
-                Init(owner);
-            };
-        }
+
+        Process();
+        _completedFirstImport = true;
     }
 
     public void AddNodesAndConnections(PipelineContextStore pipelineContextStore)
@@ -207,21 +206,6 @@ public partial class PipeContext : Node {
             p.CurrentValue = p.CurrentNodePipe.Pipe(p.CurrentValue);
             p.CurrentProgress++;
         }
-    }
-
-    private void Init(Node owner)
-    {
-        GD.Print("Ready!!");
-
-        var pipelineContextStores = _pipelineAccess.Read(owner.SceneFilePath);
-        var pipelineContextStore = pipelineContextStores?.SingleOrDefault(pcs => pcs.Name == Name);
-        if (pipelineContextStore != null)
-        {
-            AddNodesAndConnections(pipelineContextStore);   
-        }
-
-        Process();
-        _completedFirstImport = true;
     }
 
     private void Process()

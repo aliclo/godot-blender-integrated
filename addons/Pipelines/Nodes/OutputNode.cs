@@ -119,6 +119,7 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         if (_outputNodeStore != null)
         {
             _outputNodePicker.Text = _outputNodeStore.Destination;
+            _destination = _outputNodeStore.Destination;
         }
     }
 
