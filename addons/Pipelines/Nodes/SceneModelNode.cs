@@ -407,7 +407,9 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
 
     private BlendNodes RetrieveBlendSceneNodes()
     {
-        var resource = _sceneModelPicker.EditedResource;
+        // Get resource path and load without using cache
+        var chosenResource = _sceneModelPicker.EditedResource;
+        var resource = ResourceLoader.Load(chosenResource.ResourcePath, cacheMode: ResourceLoader.CacheMode.Replace);
         if (resource == null)
         {
             throw new InvalidOperationException($"No scene set for import for {Name}");
