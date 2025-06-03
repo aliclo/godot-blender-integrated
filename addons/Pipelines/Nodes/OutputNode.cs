@@ -51,7 +51,7 @@ public partial class OutputNode : PipelineNode, IReceivePipe
     private OutputNodeStore _outputNodeStore;
     private PipeContext _context;
 
-    private TextEdit _outputNodePicker;
+    private Button _outputNodePicker;
 
     private NodePath _destination;
     private string _nodeName;
@@ -91,7 +91,7 @@ public partial class OutputNode : PipelineNode, IReceivePipe
     {
         return GodotJsonParser.ToJsonType(new OutputNodeStore()
         {
-            Destination = _outputNodePicker.Text
+            Destination = _destination
         });
     }
 
@@ -111,15 +111,18 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         nodeLabel.Text = "Node";
         AddChild(nodeLabel);
 
-        _outputNodePicker = new TextEdit();
-        _outputNodePicker.ScrollFitContentHeight = true;
-        _outputNodePicker.TextChanged += OutputNodeChanged;
+        _outputNodePicker = new Button();
+        _outputNodePicker.Pressed += OutputNodePickerPressed;
         AddChild(_outputNodePicker);
 
         if (_outputNodeStore != null)
         {
             _outputNodePicker.Text = _outputNodeStore.Destination;
             _destination = _outputNodeStore.Destination;
+        }
+        else
+        {
+            _outputNodePicker.Text = "Select node";
         }
     }
 
@@ -176,8 +179,10 @@ public partial class OutputNode : PipelineNode, IReceivePipe
             }
         }
 
-        if(_previousNodeChildren != null) {
-            foreach(var child in _previousNodeChildren) {
+        if (_previousNodeChildren != null)
+        {
+            foreach (var child in _previousNodeChildren)
+            {
                 child.GetParent().RemoveChild(child);
                 child.Owner = null;
                 node.AddChild(child);
@@ -203,9 +208,10 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         return null;
     }
 
-    private void GetPreviousNodeValues(Node previousNode) {
+    private void GetPreviousNodeValues(Node previousNode)
+    {
         var properties = previousNode.GetPropertyList();
-        var names = properties.Select(p => (string) p["name"]).Where(n => !PropNamesToIgnore.Contains(n));
+        var names = properties.Select(p => (string)p["name"]).Where(n => !PropNamesToIgnore.Contains(n));
         _previousNodeProps = names
             .Select(n => new NodeProp() { Name = n, Value = previousNode.Get(n) })
             .ToList();
@@ -236,49 +242,69 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         nodeOutputs.Remove(this);
     }
 
-    private void OutputNodeChanged()
+    private void OutputNodePickerPressed()
     {
-        if (_node != null)
+        EditorInterface.Singleton.PopupNodeSelector(Callable.From<NodePath>(OutputNodePathChanged));
+    }
+
+    private void OutputNodePathChanged(NodePath destinationPath)
+    {
+        if (!destinationPath.IsEmpty)
         {
-            var nodeParent = _node.GetParent();
-            if (nodeParent != null)
+            var newlyChosenParentNode = _context.RootNode.Owner.GetNodeOrNull(destinationPath);
+
+            if (newlyChosenParentNode != null)
             {
-                nodeParent.RemoveChild(_node);
+                if (_node != null)
+                {
+                    var nodeParent = _node.GetParent();
+                    if (nodeParent != null)
+                    {
+                        nodeParent.RemoveChild(_node);
+                    }
+                }
+
+                _destination = _context.RootNode.GetPathTo(newlyChosenParentNode);
+                _outputNodePicker.Text = _destination;
+
+                if (_node != null)
+                {
+                    newlyChosenParentNode.AddChild(_node);
+                    var owner = _context.RootNode?.Owner ?? _context.RootNode;
+                    _node.Owner = owner;
+                    SetOrder();
+                }
             }
-        }
-
-        _destination = _outputNodePicker.Text;
-
-        var parentNodePath = _destination;
-
-        if (!parentNodePath.IsEmpty && _node != null)
-        {
-            var parentNode = _context.RootNode.GetNode(parentNodePath);
-            parentNode.AddChild(_node);
-            var owner = _context.RootNode?.Owner ?? _context.RootNode;
-            _node.Owner = owner;
-            SetOrder();
         }
     }
     
-    private void SetOrder() {
+    private void SetOrder()
+    {
         _context.OrderOfCreation.Remove(this);
 
-        if(AbsoluteDestination == null || AbsoluteDestination.IsEmpty) {
+        if (AbsoluteDestination == null || AbsoluteDestination.IsEmpty)
+        {
             return;
         }
 
-        var outputNodes = (HashSet<OutputNode>) _context.ContextData[nameof(OutputNode)];
+        var outputNodes = (HashSet<OutputNode>)_context.ContextData[nameof(OutputNode)];
 
-        if(outputNodes.Any(no => no.AbsoluteDestinationIncludingNode == AbsoluteDestination || no.AbsoluteDestination == AbsoluteDestinationIncludingNode)) {
+        if (outputNodes.Any(no => no.AbsoluteDestinationIncludingNode == AbsoluteDestination || no.AbsoluteDestination == AbsoluteDestinationIncludingNode))
+        {
             int indexOfParentNode = _context.OrderOfCreation.FindIndex(no => no.AbsoluteDestinationIncludingNode == AbsoluteDestination);
-            if(indexOfParentNode != -1) {
-                _context.OrderOfCreation.Insert(indexOfParentNode+1, this);
-            } else {
+            if (indexOfParentNode != -1)
+            {
+                _context.OrderOfCreation.Insert(indexOfParentNode + 1, this);
+            }
+            else
+            {
                 int indexOfChildNode = _context.OrderOfCreation.FindIndex(no => no.AbsoluteDestination == AbsoluteDestinationIncludingNode);
-                if(indexOfChildNode != -1) {
+                if (indexOfChildNode != -1)
+                {
                     _context.OrderOfCreation.Insert(indexOfChildNode, this);
-                } else {
+                }
+                else
+                {
                     _context.OrderOfCreation.Add(this);
                 }
             }
