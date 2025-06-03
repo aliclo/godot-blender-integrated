@@ -36,8 +36,19 @@ public partial class PipeContext : Node {
             AddNodesAndConnections(pipelineContextStore);   
         }
 
-        Process();
-        _completedFirstImport = true;
+        if (Owner.IsNodeReady())
+        {
+            Process();
+            _completedFirstImport = true;
+        }
+        else
+        {
+            Owner.Ready += () =>
+            {
+                Process();
+                _completedFirstImport = true;
+            };
+        }
     }
 
     public void AddNodesAndConnections(PipelineContextStore pipelineContextStore)
