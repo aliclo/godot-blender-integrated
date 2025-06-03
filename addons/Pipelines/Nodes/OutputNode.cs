@@ -131,20 +131,20 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         
     }
 
-    public void PreRegistration()
+    public void Register()
     {
         SetOrder();
-    }
 
-    public void Register(string nodeName)
-    {
-        _nodeName = nodeName;
-
-        _node = _context.RootNode.GetNodeOrNull(_destination + "/" + nodeName);
+        _node = _context.RootNode.GetNodeOrNull(_destination + "/" + _nodeName);
         if (_node != null)
         {
             GetPreviousNodeValues(_node);
         }
+    }
+
+    public void PreRegister(string nodeName)
+    {
+        _nodeName = nodeName;
 
         HashSet<OutputNode> outputNodes;
         bool exists = _context.ContextData.TryGetValue(nameof(OutputNode), out object outputNodesObj);
@@ -216,7 +216,9 @@ public partial class OutputNode : PipelineNode, IReceivePipe
             .Select(n => new NodeProp() { Name = n, Value = previousNode.Get(n) })
             .ToList();
 
-        _previousNodeChildren = previousNode.GetChildren().ToList();
+        var outputNodes = (HashSet<OutputNode>)_context.ContextData[nameof(OutputNode)];
+        var outputNodePaths = outputNodes.Select(on => on.AbsoluteDestinationIncludingNode);
+        _previousNodeChildren = previousNode.GetChildren().Where(c => !outputNodePaths.Contains(_context.GetPathTo(c))).ToList();
     }
 
     public void Clean()

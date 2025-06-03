@@ -156,21 +156,21 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
 
     }
 
-    public void PreRegistration()
+    public void Register()
     {
         foreach (var pipe in NextPipes)
         {
-            pipe.PreRegistration();
+            pipe.Register();
         }
     }
 
-    public void Register(string nodeName)
+    public void PreRegister(string nodeName)
     {
         _nodeName = $"{nodeName}-{EDGEIFY_NAME}";
 
         foreach (var pipe in NextPipes)
         {
-            pipe.Register(_nodeName);
+            pipe.PreRegister(_nodeName);
         }
     }
 

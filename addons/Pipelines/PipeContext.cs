@@ -119,7 +119,7 @@ public partial class PipeContext : Node {
 
     public void ReprocessPipe(List<ValuePipe> valuePipes) {
         foreach(var valuePipe in valuePipes) {
-            valuePipe.Pipe.PreRegistration();
+            valuePipe.Pipe.Register();
         }
 
         var nodePipes = new List<NodePipes>();
@@ -238,7 +238,7 @@ public partial class PipeContext : Node {
         {
             foreach (var pipe in pipeList.Pipes)
             {
-                pipe.PreRegistration();
+                pipe.Register();
             }
         }
 

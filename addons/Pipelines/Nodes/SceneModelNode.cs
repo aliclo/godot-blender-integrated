@@ -378,28 +378,28 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
 
         foreach (var meshPipe in _meshPipes)
         {
-            meshPipe.Register(MESH_INSTANCE_3D_NAME);
+            meshPipe.PreRegister(MESH_INSTANCE_3D_NAME);
             var pipeValue = new PipeValue() { Value = mesh, TouchedProperties = TOUCHED_PROPERTIES };
             _context.RegisterPipe(new ValuePipe() { Pipe = meshPipe, CloneablePipeValue = new CloneablePipeValue() { PipeValue = pipeValue } });
         }
 
         foreach (var physicsBodyPipe in _physicsBodyPipes)
         {
-            physicsBodyPipe.Register(PHYSICS_BODY_3D_NAME);
+            physicsBodyPipe.PreRegister(PHYSICS_BODY_3D_NAME);
             var pipeValue = new PipeValue() { Value = body, TouchedProperties = TOUCHED_PROPERTIES };
             _context.RegisterPipe(new ValuePipe() { Pipe = physicsBodyPipe, CloneablePipeValue = new CloneablePipeValue() { PipeValue = pipeValue } });
         }
 
         foreach (var collisionShapePipe in _collisionShapePipes)
         {
-            collisionShapePipe.Register(COLLISION_SHAPE_3D_NAME);
+            collisionShapePipe.PreRegister(COLLISION_SHAPE_3D_NAME);
             var pipeValue = new PipeValue() { Value = collisionShape, TouchedProperties = TOUCHED_PROPERTIES };
             _context.RegisterPipe(new ValuePipe() { Pipe = collisionShapePipe, CloneablePipeValue = new CloneablePipeValue() { PipeValue = pipeValue } });
         }
 
         foreach (var animationPlayerPipe in _animationPlayerPipes)
         {
-            animationPlayerPipe.Register(ANIMATION_PLAYER_NAME);
+            animationPlayerPipe.PreRegister(ANIMATION_PLAYER_NAME);
             var pipeValue = new PipeValue() { Value = animationPlayer, TouchedProperties = TOUCHED_PROPERTIES };
             _context.RegisterPipe(new ValuePipe() { Pipe = animationPlayerPipe, CloneablePipeValue = new CloneablePipeValue() { PipeValue = pipeValue } });
         }

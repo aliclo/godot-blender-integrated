@@ -8,7 +8,7 @@ public class DestinationHelper
     {
         foreach (var receiver in receiversToAdd)
         {
-            receiver.Register(destinationNodeName);
+            receiver.PreRegister(destinationNodeName);
         }
 
         if (cloneableValue != null)
