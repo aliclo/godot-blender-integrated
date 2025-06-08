@@ -328,6 +328,7 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         _sceneModelPicker = new EditorResourcePicker();
         _sceneModelPicker.BaseType = nameof(PackedScene);
         _sceneModelPicker.ResourceChanged += SceneChanged;
+        ImportEventer.Instance.SceneImportUpdated += SceneUpdated;
         AddChild(_sceneModelPicker);
 
         var physicsBodyOptions = new List<string>() {
@@ -517,6 +518,11 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
     }
 
     private void SceneChanged(Resource scene)
+    {
+        _context?.Reprocess();
+    }
+
+    private void SceneUpdated()
     {
         _context?.Reprocess();
     }

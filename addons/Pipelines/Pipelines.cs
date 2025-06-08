@@ -12,13 +12,17 @@ public partial class Pipelines : EditorPlugin
 	private PipeContext _context;
 	private EditorSelection _selection;
 	private PipelineAccess _pipelineAccess = new PipelineAccess();
+	private ImportEventer _importEventer;
 
 	public override void _EnterTree()
 	{
 		// Initialization of the plugin goes here.
+		_importEventer = new ImportEventer();
+		_importEventer.Init();
 		var pipeContextScript = GD.Load<CSharpScript>($"{ADDON_PATH}/{nameof(PipeContext)}.cs");
 		var pipeContextIcon = GD.Load<Texture2D>($"{ADDON_PATH}/{nameof(PipeContext)}.png");
 		AddCustomType(nameof(PipeContext), nameof(Node), pipeContextScript, pipeContextIcon);
+		AddScenePostImportPlugin(_importEventer);
 		_selection = EditorInterface.Singleton.GetSelection();
 		_selection.SelectionChanged += OnSelectionChanged;
 		SceneSaved += OnSave;
@@ -28,10 +32,12 @@ public partial class Pipelines : EditorPlugin
 	{
 		// Clean-up of the plugin goes here.
 		// TODO: Clear save history at this point
+		RemoveScenePostImportPlugin(_importEventer);
 		RemoveCustomType(nameof(PipeContext));
 		SceneSaved -= OnSave;
 		_selection.SelectionChanged -= OnSelectionChanged;
-		if(_pipelineEditor != null) {
+		if (_pipelineEditor != null)
+		{
 			ClearContextAndPipelineGraph();
 		}
 	}
