@@ -160,22 +160,24 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
 
     private void ConnectMesh(IList<IReceivePipe> receivePipes)
     {
-        BlendNodes blendNodes = null;
-
-        try
-        {
-            blendNodes = RetrieveBlendSceneNodes();
-        }
-        catch (InvalidOperationException e)
-        {
-            GD.PrintErr(e.Message);
-        }
-
         _meshPipes.AddRange(receivePipes);
 
-        var destinationHelper = new DestinationHelper();
-        var pipeValue = blendNodes?.Mesh == null ? null : new PipeValue() { Value = blendNodes.Mesh, TouchedProperties = TOUCHED_PROPERTIES };
-        destinationHelper.AddReceivePipes(_context, MESH_INSTANCE_3D_NAME, receivePipes, blendNodes?.Mesh == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
+        if (_sceneModelPicker.EditedResource != null)
+        {
+            BlendNodes blendNodes = null;
+            try
+            {
+                blendNodes = RetrieveBlendSceneNodes();
+            }
+            catch (InvalidOperationException e)
+            {
+                GD.PrintErr(e.Message);
+            }
+
+            var destinationHelper = new DestinationHelper();
+            var pipeValue = blendNodes?.Mesh == null ? null : new PipeValue() { Value = blendNodes.Mesh, TouchedProperties = TOUCHED_PROPERTIES };
+            destinationHelper.AddReceivePipes(_context, MESH_INSTANCE_3D_NAME, receivePipes, blendNodes?.Mesh == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
+        }
     }
 
     private void DisconnectMesh(IList<IReceivePipe> receivePipes)
@@ -188,22 +190,25 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
 
     private void ConnectPhyisicsBody(IList<IReceivePipe> receivePipes)
     {
-        BlendNodes blendNodes = null;
-
-        try
-        {
-            blendNodes = RetrieveBlendSceneNodes();
-        }
-        catch (InvalidOperationException e)
-        {
-            GD.PrintErr(e.Message);
-        }
-
         _physicsBodyPipes.AddRange(receivePipes);
 
-        var destinationHelper = new DestinationHelper();
-        var pipeValue = blendNodes?.PhysicsBody == null ? null : new PipeValue() { Value = blendNodes.PhysicsBody, TouchedProperties = TOUCHED_PROPERTIES };
-        destinationHelper.AddReceivePipes(_context, PHYSICS_BODY_3D_NAME, receivePipes, blendNodes?.PhysicsBody == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
+        if (_sceneModelPicker.EditedResource != null)
+        {
+            BlendNodes blendNodes = null;
+
+            try
+            {
+                blendNodes = RetrieveBlendSceneNodes();
+            }
+            catch (InvalidOperationException e)
+            {
+                GD.PrintErr(e.Message);
+            }
+
+            var destinationHelper = new DestinationHelper();
+            var pipeValue = blendNodes?.PhysicsBody == null ? null : new PipeValue() { Value = blendNodes.PhysicsBody, TouchedProperties = TOUCHED_PROPERTIES };
+            destinationHelper.AddReceivePipes(_context, PHYSICS_BODY_3D_NAME, receivePipes, blendNodes?.PhysicsBody == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
+        }
     }
 
     private void DisconnectPhyisicsBody(IList<IReceivePipe> receivePipes)
@@ -216,22 +221,25 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
 
     private void ConnectCollisionShape(IList<IReceivePipe> receivePipes)
     {
-        BlendNodes blendNodes = null;
-
-        try
-        {
-            blendNodes = RetrieveBlendSceneNodes();
-        }
-        catch (InvalidOperationException e)
-        {
-            GD.PrintErr(e.Message);
-        }
-
         _collisionShapePipes.AddRange(receivePipes);
 
-        var destinationHelper = new DestinationHelper();
-        var pipeValue = blendNodes?.CollisionShape == null ? null : new PipeValue() { Value = blendNodes.CollisionShape, TouchedProperties = TOUCHED_PROPERTIES };
-        destinationHelper.AddReceivePipes(_context, ANIMATION_PLAYER_NAME, receivePipes, blendNodes?.CollisionShape == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
+        if (_sceneModelPicker.EditedResource != null)
+        {
+            BlendNodes blendNodes = null;
+
+            try
+            {
+                blendNodes = RetrieveBlendSceneNodes();
+            }
+            catch (InvalidOperationException e)
+            {
+                GD.PrintErr(e.Message);
+            }
+
+            var destinationHelper = new DestinationHelper();
+            var pipeValue = blendNodes?.CollisionShape == null ? null : new PipeValue() { Value = blendNodes.CollisionShape, TouchedProperties = TOUCHED_PROPERTIES };
+            destinationHelper.AddReceivePipes(_context, ANIMATION_PLAYER_NAME, receivePipes, blendNodes?.CollisionShape == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
+        }
     }
 
     private void DisconnectCollisionShape(IList<IReceivePipe> receivePipes)
@@ -244,22 +252,25 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
 
     private void ConnectAnimationPlayer(IList<IReceivePipe> receivePipes)
     {
-        BlendNodes blendNodes = null;
-
-        try
-        {
-            blendNodes = RetrieveBlendSceneNodes();
-        }
-        catch (InvalidOperationException e)
-        {
-            GD.PrintErr(e.Message);
-        }
-
         _animationPlayerPipes.AddRange(receivePipes);
 
-        var destinationHelper = new DestinationHelper();
-        var pipeValue = blendNodes?.AnimationPlayer == null ? null : new PipeValue() { Value = blendNodes.AnimationPlayer, TouchedProperties = TOUCHED_PROPERTIES };
-        destinationHelper.AddReceivePipes(_context, ANIMATION_PLAYER_NAME, receivePipes, blendNodes?.AnimationPlayer == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
+        if (_sceneModelPicker.EditedResource != null)
+        {
+            BlendNodes blendNodes = null;
+
+            try
+            {
+                blendNodes = RetrieveBlendSceneNodes();
+            }
+            catch (InvalidOperationException e)
+            {
+                GD.PrintErr(e.Message);
+            }
+
+            var destinationHelper = new DestinationHelper();
+            var pipeValue = blendNodes?.AnimationPlayer == null ? null : new PipeValue() { Value = blendNodes.AnimationPlayer, TouchedProperties = TOUCHED_PROPERTIES };
+            destinationHelper.AddReceivePipes(_context, ANIMATION_PLAYER_NAME, receivePipes, blendNodes?.AnimationPlayer == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
+        }
     }
 
     private void DisconnectAnimationPlayer(IList<IReceivePipe> receivePipes)
