@@ -1,3 +1,4 @@
+#if TOOLS
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -149,11 +150,6 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
             _minYLineEdit.Number = _minY;
             _maxYLineEdit.Number = _maxY;
         }
-    }
-
-    public override void _Ready()
-    {
-
     }
 
     public void Register()
@@ -602,3 +598,4 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
 
 
 }
+#endif

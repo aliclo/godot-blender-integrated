@@ -1,3 +1,4 @@
+#if TOOLS
 using Godot;
 using System;
 using System.Collections.Generic;
@@ -295,11 +296,6 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         _sceneModelNodeStore = GodotJsonParser.FromJsonType<SceneModelNodeStore>(data);
     }
 
-    public override void _Ready()
-    {
-        
-    }
-
     public override void Init(PipeContext context)
     {
         _context = context;
@@ -544,3 +540,4 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
     }
     
 }
+#endif

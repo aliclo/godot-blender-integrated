@@ -1,3 +1,4 @@
+#if TOOLS
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
@@ -124,11 +125,6 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         {
             _outputNodePicker.Text = "Select node";
         }
-    }
-
-    public override void _Ready()
-    {
-        
     }
 
     public void Register()
@@ -329,3 +325,4 @@ public partial class OutputNode : PipelineNode, IReceivePipe
     }
 
 }
+#endif
