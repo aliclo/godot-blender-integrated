@@ -384,7 +384,7 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
 
         return new PipeValue()
         {
-            Value = _meshInstance3D,
+            Value = _meshInstance3D.Duplicate(),
             TouchedProperties = TOUCHED_PROPERTIES
         };
     }
@@ -464,7 +464,7 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
         NextPipes.AddRange(receivePipes);
 
         var destinationHelper = new DestinationHelper();
-        var pipeValue = new PipeValue() { Value = _meshInstance3D, TouchedProperties = TOUCHED_PROPERTIES };
+        var pipeValue = new PipeValue() { Value = _meshInstance3D.Duplicate(), TouchedProperties = TOUCHED_PROPERTIES };
         destinationHelper.AddReceivePipes(_context, _nodeName, receivePipes, _meshInstance3D == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
     }
 
