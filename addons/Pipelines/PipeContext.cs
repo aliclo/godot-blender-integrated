@@ -42,20 +42,32 @@ public partial class PipeContext : Node
             AddNodesAndConnections(pipelineContextStore);
         }
 
-        if (Owner.IsNodeReady())
+        if (Owner != null)
         {
-            Process();
-            _completedFirstImport = true;
-        }
-        else
-        {
-            Owner.Ready += () =>
+            if (Owner.IsNodeReady())
             {
                 Process();
                 _completedFirstImport = true;
-            };
+            }
+            else
+            {
+                Owner.Ready += () =>
+                {
+                    Process();
+                    _completedFirstImport = true;
+                };
+            }
         }
     }
+
+    public override void _EnterTree()
+    {
+        if (Owner == null)
+        {
+            _completedFirstImport = true;
+        }
+    }
+
 
     public void AddNodesAndConnections(PipelineContextStore pipelineContextStore)
     {
