@@ -19,7 +19,7 @@ public partial class Pipelines : EditorPlugin
 	{
 		// Initialization of the plugin goes here.
 		_importEventer = new ImportEventer();
-		_importEventer.Init();
+		_importEventer.Init(this);
 		_importEventer.SceneImportUpdated += SavePipelineScenes;
 		var pipeContextScript = GD.Load<CSharpScript>($"{ADDON_PATH}/{nameof(PipeContext)}.cs");
 		var pipeContextIcon = GD.Load<Texture2D>($"{ADDON_PATH}/{nameof(PipeContext)}.png");
@@ -105,14 +105,9 @@ public partial class Pipelines : EditorPlugin
 
 		foreach (var sceneFilePath in sceneFilePaths)
 		{
-			CallDeferred(MethodName.SaveScene, sceneFilePath);
+			EditorInterface.Singleton.OpenSceneFromPath(sceneFilePath);
+			EditorInterface.Singleton.SaveScene();
 		}
-	}
-
-	private void SaveScene(string sceneFilePath)
-	{
-		EditorInterface.Singleton.OpenSceneFromPath(sceneFilePath);
-		EditorInterface.Singleton.SaveScene();
 	}
 
 	private IEnumerable<string> FindFilesEndingWith(string dirPath, string str)
