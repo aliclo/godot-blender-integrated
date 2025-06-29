@@ -407,42 +407,49 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
     {
         _thicknessX = number;
         _context?.Reprocess();
+        EditorInterface.Singleton.MarkSceneAsUnsaved();
     }
 
     private void ThicknessYChanged(double number)
     {
         _thicknessY = number;
         _context?.Reprocess();
+        EditorInterface.Singleton.MarkSceneAsUnsaved();
     }
 
     private void SharpnessThresholdChanged(double number)
     {
         _sharpnessThreshold = number;
         _context?.Reprocess();
+        EditorInterface.Singleton.MarkSceneAsUnsaved();
     }
 
     private void MinYAngleChanged(double number)
     {
         _minYAngle = number;
         _context?.Reprocess();
+        EditorInterface.Singleton.MarkSceneAsUnsaved();
     }
 
     private void MaxYAngleChanged(double number)
     {
         _maxYAngle = number;
         _context?.Reprocess();
+        EditorInterface.Singleton.MarkSceneAsUnsaved();
     }
 
     private void MinYChanged(double number)
     {
         _minY = number;
         _context?.Reprocess();
+        EditorInterface.Singleton.MarkSceneAsUnsaved();
     }
 
     private void MaxYChanged(double number)
     {
         _maxY = number;
         _context?.Reprocess();
+        EditorInterface.Singleton.MarkSceneAsUnsaved();
     }
 
     public override void AddConnection(int index, List<IReceivePipe> receivePipes)

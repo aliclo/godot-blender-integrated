@@ -102,6 +102,8 @@ public partial class PipelineGraph : GraphEdit
 
             UndoRedo.CommitAction();
         }
+
+        EditorInterface.Singleton.MarkSceneAsUnsaved();
     }
 
     private void ReplaceNodeConnection(string oldFromNodeName, int oldFromPort, string newFromNodeName, int newFromPort, string toNodeName, int toPort)
@@ -169,15 +171,16 @@ public partial class PipelineGraph : GraphEdit
         UndoRedo.AddDoMethod(this, MethodName.AddPipelineNode, graphNode);
         UndoRedo.AddUndoMethod(this, MethodName.RemovePipelineNode, graphNode);
         UndoRedo.CommitAction();
+        EditorInterface.Singleton.MarkSceneAsUnsaved();
     }
 
-    public void AddPipelineNode(PipelineNode pipelineNode)
+    private void AddPipelineNode(PipelineNode pipelineNode)
     {
         AddChild(pipelineNode);
         _context.PipelineNodeDict[pipelineNode.Name] = pipelineNode;
     }
 
-    public void RemovePipelineNode(PipelineNode pipelineNode)
+    private void RemovePipelineNode(PipelineNode pipelineNode)
     {
         RemoveChild(pipelineNode);
         _context.PipelineNodeDict.Remove(pipelineNode.Name);
@@ -211,6 +214,7 @@ public partial class PipelineGraph : GraphEdit
         UndoRedo.AddUndoMethod(this, MethodName.ConnectPipelineNode, fromNodeName, fromPort, toNodeName, toPort);
 
         UndoRedo.CommitAction();
+        EditorInterface.Singleton.MarkSceneAsUnsaved();
     }
 
     private void HandleDeleteNodesRequest(Array nodeNames)
@@ -235,6 +239,7 @@ public partial class PipelineGraph : GraphEdit
         UndoRedo.AddDoMethod(this, MethodName.DeleteNodes, nodes);
         UndoRedo.AddUndoMethod(this, MethodName.AddNodesAndConnections, pipelineContextStore);
         UndoRedo.CommitAction();
+        EditorInterface.Singleton.MarkSceneAsUnsaved();
     }
 
     private void DeleteNodes(Array<PipelineNode> nodes)

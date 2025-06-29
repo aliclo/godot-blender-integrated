@@ -527,6 +527,7 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
     private void SceneChanged(Resource scene)
     {
         _context?.Reprocess();
+        EditorInterface.Singleton.MarkSceneAsUnsaved();
     }
 
     private void SceneUpdated()

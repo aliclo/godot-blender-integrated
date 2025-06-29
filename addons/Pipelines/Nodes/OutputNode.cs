@@ -274,6 +274,8 @@ public partial class OutputNode : PipelineNode, IReceivePipe
                 }
             }
         }
+        
+        EditorInterface.Singleton.MarkSceneAsUnsaved();
     }
     
     private void SetOrder()
