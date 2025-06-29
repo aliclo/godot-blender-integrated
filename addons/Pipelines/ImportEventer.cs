@@ -19,7 +19,7 @@ public partial class ImportEventer : EditorScenePostImportPlugin
         var timer = new System.Timers.Timer();
         timer.Elapsed += (object sender, ElapsedEventArgs e) => CallDeferred(MethodName.RaiseSceneImportUpdated);
         timer.AutoReset = false;
-        timer.Interval = 0.5;
+        timer.Interval = 1;
         timer.Start();
     }
 
