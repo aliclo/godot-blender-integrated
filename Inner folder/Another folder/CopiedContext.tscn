@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://ldtvm82xkrw7"]
+
+[ext_resource type="Script" path="res://addons/Pipelines/PipeContext.cs" id="1_h8c6p"]
+
+[node name="CopiedContext" type="Node3D"]
+
+[node name="PipeContext" type="Node" parent="."]
+script = ExtResource("1_h8c6p")

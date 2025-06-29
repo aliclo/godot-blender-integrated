@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="BlenderImporterPlus"
-run/main_scene="res://addons/Pipelines/PipelineEditor.tscn"
+run/main_scene="res://Inner folder/SimpleImport.tscn"
 config/features=PackedStringArray("4.3", "C#", "Forward Plus")
 config/icon="res://icon.svg"
 
@@ -21,4 +21,4 @@ project/assembly_name="BlenderImporterPlus"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/NumericLineEdit/plugin.cfg")
+enabled=PackedStringArray("res://addons/NumericLineEdit/plugin.cfg", "res://addons/Pipelines/plugin.cfg")
