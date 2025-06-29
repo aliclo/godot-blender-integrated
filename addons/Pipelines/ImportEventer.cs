@@ -5,8 +5,8 @@ public partial class ImportEventer : EditorScenePostImportPlugin
 
     public static ImportEventer Instance { get; private set; }
 
+    [Signal]
     public delegate void SceneImportUpdatedEventHandler();
-    public event SceneImportUpdatedEventHandler SceneImportUpdated;
     private Pipelines _pipelines;
 
     public void Init(Pipelines pipelines)
@@ -26,7 +26,7 @@ public partial class ImportEventer : EditorScenePostImportPlugin
 
     private void RaiseSceneImportUpdated()
     {
-        SceneImportUpdated();
+        EmitSignal(SignalName.SceneImportUpdated);
     }
     
 }
