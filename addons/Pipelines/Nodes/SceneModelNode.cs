@@ -98,7 +98,7 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
     public override void Connect(int index, List<IReceivePipe> receivePipes)
     {
         _nodeConnections[index].AddRange(receivePipes);
-        
+
         var connection = (Connections)index;
         switch (connection)
         {
@@ -538,6 +538,11 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
     {
         _context?.Reprocess();
     }
-    
+
+    public override void DisposePipe()
+    {
+        ImportEventer.Instance.SceneImportUpdated -= SceneUpdated;
+    }
+
 }
 #endif

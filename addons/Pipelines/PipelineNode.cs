@@ -11,11 +11,12 @@ public abstract partial class PipelineNode : GraphNode, IPipe, IStorable
     public abstract void AddConnection(int index, List<IReceivePipe> receivePipes);
 
     public abstract void Connect(int index, List<IReceivePipe> receivePipes);
-    
+
     public abstract void Disconnect(int index, List<IReceivePipe> receivePipes);
 
     public abstract Variant GetData();
 
     public abstract void Load(Variant data);
+    public abstract void DisposePipe();
 
 }

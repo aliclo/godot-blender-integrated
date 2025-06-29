@@ -10,5 +10,6 @@ public interface IPipe
     public void AddConnection(int index, List<IReceivePipe> receivePipes);
     public void Connect(int index, List<IReceivePipe> receivePipes);
     public void Disconnect(int index, List<IReceivePipe> receivePipes);
+    public void DisposePipe();
 
 }

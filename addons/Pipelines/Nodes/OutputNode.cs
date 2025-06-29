@@ -324,5 +324,9 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         // No output connections
     }
 
+    public override void DisposePipe()
+    {
+        // Nothing to dispose
+    }
 }
 #endif

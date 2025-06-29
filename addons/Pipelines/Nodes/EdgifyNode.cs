@@ -596,6 +596,10 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
         return lineEdit;
     }
 
+    public override void DisposePipe()
+    {
+        // Nothing to dispose
+    }
 
 }
 #endif

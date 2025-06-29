@@ -5,9 +5,11 @@ using Godot.Collections;
 
 #if TOOLS
 [Tool]
-public partial class PipeContext : Node {
+public partial class PipeContext : Node
+{
 
-    private class NodePipes {
+    private class NodePipes
+    {
         public IReceivePipe CurrentNodePipe => Pipes[CurrentProgress];
         public PipeValue CurrentValue { get; set; }
         public List<IReceivePipe> Pipes { get; set; }
@@ -117,18 +119,22 @@ public partial class PipeContext : Node {
         }
     }
 
-    public void RegisterPipe(ValuePipe valuePipe) {
+    public void RegisterPipe(ValuePipe valuePipe)
+    {
         _nodePipesList.AddRange(GetNodePipes(valuePipe));
     }
 
-    public void ReprocessPipe(List<ValuePipe> valuePipes) {
-        foreach (var valuePipe in valuePipes) {
+    public void ReprocessPipe(List<ValuePipe> valuePipes)
+    {
+        foreach (var valuePipe in valuePipes)
+        {
             valuePipe.Pipe.Register();
         }
 
         var nodePipes = new List<NodePipes>();
 
-        foreach (var valuePipe in valuePipes) {
+        foreach (var valuePipe in valuePipes)
+        {
             nodePipes.AddRange(GetNodePipes(valuePipe));
         }
 
@@ -145,15 +151,18 @@ public partial class PipeContext : Node {
         var nodePipes = new List<List<IReceivePipe>>() { new List<IReceivePipe>() { pipe } };
         List<List<IReceivePipe>> nodePipesWithNext;
 
-        do {
+        do
+        {
             nodePipesWithNext = nodePipes.Where(np => np.Last().NextPipes != null && np.Last().NextPipes.Any()).ToList();
             var nodePipesWithoutNext = nodePipes.Except(nodePipesWithNext);
             processedPipes.AddRange(nodePipesWithoutNext);
 
             var newNodePipes = new List<List<IReceivePipe>>();
-            foreach (var nodePipe in nodePipesWithNext) {
+            foreach (var nodePipe in nodePipesWithNext)
+            {
                 var lastPipe = nodePipe.Last();
-                newNodePipes.AddRange(lastPipe.NextPipes.Select(np => {
+                newNodePipes.AddRange(lastPipe.NextPipes.Select(np =>
+                {
                     var clonedNodePipe = new List<IReceivePipe>(nodePipe);
                     clonedNodePipe.Add(np);
                     return clonedNodePipe;
@@ -162,42 +171,54 @@ public partial class PipeContext : Node {
             nodePipes = newNodePipes;
         } while (nodePipesWithNext.Any());
 
-        return processedPipes.Select(p => new NodePipes() {
+        return processedPipes.Select(p => new NodePipes()
+        {
             CurrentValue = cloneablePipeValue.ClonePipeValue(),
             Pipes = p,
             CurrentProgress = 0
         });
     }
 
-    private List<NodePipes> OrderEvaluation(List<NodePipes> nodePipesList) {
+    private List<NodePipes> OrderEvaluation(List<NodePipes> nodePipesList)
+    {
         // When determining processing, there are two types:
         // - 1. Ones that can be done directly without any dependency as they are done singly
         // - 2. Ones that are done together and need to be done within an order
         // For (2) we can therefore generate this ordering for cleanup and piping
         var nodePipesOrdering = new List<NodePipes>();
         var evaluateNodePipes = new List<NodePipes>(nodePipesList);
-        while (evaluateNodePipes.Any()) {
-            if (evaluateNodePipes.Any(p => OrderOfCreation.Contains(p.CurrentNodePipe))) {
-                if (OrderOfCreation.All(ooc => evaluateNodePipes.Select(eoop => eoop.CurrentNodePipe).Contains(ooc))) {
+        while (evaluateNodePipes.Any())
+        {
+            if (evaluateNodePipes.Any(p => OrderOfCreation.Contains(p.CurrentNodePipe)))
+            {
+                if (OrderOfCreation.All(ooc => evaluateNodePipes.Select(eoop => eoop.CurrentNodePipe).Contains(ooc)))
+                {
                     var orderOfEvaluation = OrderOfCreation
                         .Select(oocp => evaluateNodePipes.Single(eoop => eoop.CurrentNodePipe == oocp))
                         .ToList();
 
-                    foreach (var p in orderOfEvaluation) {
-                        nodePipesOrdering.Add(p);
-                        p.CurrentProgress++;
-                    }
-                } else {
-                    var pipesToProcess = evaluateNodePipes
-                        .Where(p => !OrderOfCreation.Contains(p.CurrentNodePipe));
-
-                    foreach (var p in pipesToProcess) {
+                    foreach (var p in orderOfEvaluation)
+                    {
                         nodePipesOrdering.Add(p);
                         p.CurrentProgress++;
                     }
                 }
-            } else {
-                foreach (var p in evaluateNodePipes) {
+                else
+                {
+                    var pipesToProcess = evaluateNodePipes
+                        .Where(p => !OrderOfCreation.Contains(p.CurrentNodePipe));
+
+                    foreach (var p in pipesToProcess)
+                    {
+                        nodePipesOrdering.Add(p);
+                        p.CurrentProgress++;
+                    }
+                }
+            }
+            else
+            {
+                foreach (var p in evaluateNodePipes)
+                {
                     nodePipesOrdering.Add(p);
                     p.CurrentProgress++;
                 }
@@ -209,14 +230,17 @@ public partial class PipeContext : Node {
         return nodePipesOrdering;
     }
 
-    private void EvaluateNodePipes(List<NodePipes> nodePipesOrdering) {
-        foreach (var p in nodePipesOrdering.Reverse<NodePipes>()) {
+    private void EvaluateNodePipes(List<NodePipes> nodePipesOrdering)
+    {
+        foreach (var p in nodePipesOrdering.Reverse<NodePipes>())
+        {
             p.CurrentProgress--;
             p.CurrentNodePipe.Clean();
         }
 
         var nodePipesToProcess = nodePipesOrdering.Where(npo => npo.CurrentValue != null);
-        foreach (var p in nodePipesToProcess) {
+        foreach (var p in nodePipesToProcess)
+        {
             p.CurrentValue = p.CurrentNodePipe.Pipe(p.CurrentValue);
             p.CurrentProgress++;
         }
@@ -248,6 +272,18 @@ public partial class PipeContext : Node {
         var nodePipesOrdering = OrderEvaluation(_nodePipesList);
 
         EvaluateNodePipes(nodePipesOrdering);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        var allPipes = _pipelineNodeDict.Values;
+
+        foreach (var pipe in allPipes)
+        {
+            pipe.DisposePipe();
+        }
+
+        base.Dispose(disposing);
     }
 
 }

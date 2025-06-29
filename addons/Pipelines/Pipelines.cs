@@ -1,5 +1,6 @@
 #if TOOLS
 using Godot;
+using System.Collections.Generic;
 using System.Linq;
 
 [Tool]
@@ -19,6 +20,7 @@ public partial class Pipelines : EditorPlugin
 		// Initialization of the plugin goes here.
 		_importEventer = new ImportEventer();
 		_importEventer.Init();
+		_importEventer.SceneImportUpdated += SavePipelineScenes;
 		var pipeContextScript = GD.Load<CSharpScript>($"{ADDON_PATH}/{nameof(PipeContext)}.cs");
 		var pipeContextIcon = GD.Load<Texture2D>($"{ADDON_PATH}/{nameof(PipeContext)}.png");
 		AddCustomType(nameof(PipeContext), nameof(Node), pipeContextScript, pipeContextIcon);
@@ -32,6 +34,7 @@ public partial class Pipelines : EditorPlugin
 	{
 		// Clean-up of the plugin goes here.
 		// TODO: Clear save history at this point
+		_importEventer.SceneImportUpdated -= SavePipelineScenes;
 		RemoveScenePostImportPlugin(_importEventer);
 		RemoveCustomType(nameof(PipeContext));
 		SceneSaved -= OnSave;
@@ -58,7 +61,7 @@ public partial class Pipelines : EditorPlugin
 		}
 
 		var selectedNodes = _selection.GetSelectedNodes();
-		var pipelineContext = (PipeContext) selectedNodes.FirstOrDefault(n => n is PipeContext);
+		var pipelineContext = (PipeContext)selectedNodes.FirstOrDefault(n => n is PipeContext);
 
 		if (pipelineContext != null)
 		{
@@ -71,7 +74,8 @@ public partial class Pipelines : EditorPlugin
 		}
 	}
 
-	private void InitPipelineEditor() {
+	private void InitPipelineEditor()
+	{
 		var pipelineContextStores = _pipelineAccess.Read(_context.Owner.SceneFilePath);
 		var pipelineContextStore = pipelineContextStores?.SingleOrDefault(pcs => pcs.Name == _context.Name);
 		_pipelineEditor.PipelineGraph.UndoRedo = GetUndoRedo();
@@ -88,6 +92,42 @@ public partial class Pipelines : EditorPlugin
 		_pipelineEditor.QueueFree();
 		_pipelineEditor = null;
 		_context = null;
+	}
+
+	private void SavePipelineScenes()
+	{
+		var openedScenes = EditorInterface.Singleton.GetOpenScenes();
+
+		var pipeFiles = FindFilesEndingWith("res://", ".pipelines.json");
+		var sceneFilePaths = pipeFiles
+			.Select(p => p.Substring(0, p.Length - ".pipelines.json".Length))
+			.ToList();
+
+		foreach (var sceneFilePath in sceneFilePaths)
+		{
+			CallDeferred(MethodName.SaveScene, sceneFilePath);
+		}
+	}
+
+	private void SaveScene(string sceneFilePath)
+	{
+		EditorInterface.Singleton.OpenSceneFromPath(sceneFilePath);
+		EditorInterface.Singleton.SaveScene();
+	}
+
+	private IEnumerable<string> FindFilesEndingWith(string dirPath, string str)
+	{
+		var dir = DirAccess.Open(dirPath);
+		var files = dir.GetDirectories()
+			.Where(d => d != ".godot")
+			.SelectMany(d => FindFilesEndingWith($"{dirPath}{d}/", str));
+
+		var dirFiles = dir
+			.GetFiles()
+			.Where(f => f.EndsWith(str))
+			.Select(f => $"{dirPath}{f}");
+
+		return files.Concat(dirFiles);
 	}
 }
 #endif
