@@ -2,6 +2,7 @@
 using Godot;
 using System.Collections.Generic;
 using System.Linq;
+using static SceneModelNode;
 
 [Tool]
 public partial class Pipelines : EditorPlugin
@@ -76,8 +77,6 @@ public partial class Pipelines : EditorPlugin
 
 	private void InitPipelineEditor()
 	{
-		var pipelineContextStores = _pipelineAccess.Read(_context.Owner.SceneFilePath);
-		var pipelineContextStore = pipelineContextStores?.SingleOrDefault(pcs => pcs.Name == _context.Name);
 		_pipelineEditor.PipelineGraph.UndoRedo = GetUndoRedo();
 		_pipelineEditor.PipelineGraph.OnLoadContext(_context);
 		_pipelineEditor.Ready -= InitPipelineEditor;
@@ -94,13 +93,18 @@ public partial class Pipelines : EditorPlugin
 		_context = null;
 	}
 
-	private void SavePipelineScenes()
+	private void SavePipelineScenes(string fileName)
 	{
 		var openedScenes = EditorInterface.Singleton.GetOpenScenes();
 
 		var pipeFiles = FindFilesEndingWith("res://", ".pipelines.json");
 		var sceneFilePaths = pipeFiles
 			.Select(p => p.Substring(0, p.Length - ".pipelines.json".Length))
+			.Select(p => new { Path = p, PipelineStore = _pipelineAccess.Read(p) })
+			.Select(p => new { p.Path, SceneModelNodes = p.PipelineStore.SelectMany(p => p.Nodes.Where(n => n.Type == nameof(SceneModelNode))) })
+			.Select(p => new { p.Path, SceneModelDataNodes = p.SceneModelNodes.Select(n => GodotJsonParser.FromJsonType<SceneModelNodeStore>(n.Data)) })
+			.Where(p => p.SceneModelDataNodes.Any(smn => smn.ChosenScene == fileName))
+			.Select(p => p.Path)
 			.ToList();
 
 		foreach (var sceneFilePath in sceneFilePaths)

@@ -32,7 +32,7 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         public AnimationPlayer AnimationPlayer { get; set; }
     }
 
-    private partial class SceneModelNodeStore : GodotObject
+    public partial class SceneModelNodeStore : GodotObject
     {
         [Export]
         public string ChosenScene { get; set; }
@@ -530,9 +530,12 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         EditorInterface.Singleton.MarkSceneAsUnsaved();
     }
 
-    private void SceneUpdated()
+    private void SceneUpdated(string fileName)
     {
-        _context?.Reprocess();
+        if (fileName == _sceneModelPicker.EditedResource.ResourcePath)
+        {
+            _context?.Reprocess();
+        }
     }
 
     private void PhysicsBodyOptionChosen(long index)
