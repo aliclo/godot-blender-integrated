@@ -315,10 +315,10 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
             direction = direction.Rotated(new Vector3(1, 0, 0), (float)-xRot);
             var yRot = Math.Atan2(direction.X, direction.Z);
 
-            var topLeft = new Vector3((float)(-1 * _thicknessX), (float)(-1 * _thicknessX), 0).Rotated(new Vector3(0, 1, 0), (float)yRot).Rotated(new Vector3(1, 0, 0), (float)xRot);
-            var topRight = new Vector3((float)(1 * _thicknessX), (float)(-1 * _thicknessX), 0).Rotated(new Vector3(0, 1, 0), (float)yRot).Rotated(new Vector3(1, 0, 0), (float)xRot);
-            var bottomLeft = new Vector3((float)(-1 * _thicknessX), (float)(1 * _thicknessX), 0).Rotated(new Vector3(0, 1, 0), (float)yRot).Rotated(new Vector3(1, 0, 0), (float)xRot);
-            var bottomRight = new Vector3((float)(1 * _thicknessX), (float)(1 * _thicknessX), 0).Rotated(new Vector3(0, 1, 0), (float)yRot).Rotated(new Vector3(1, 0, 0), (float)xRot);
+            var topLeft = new Vector3((float)(-1 * _thicknessX), (float)(-1 * _thicknessY), 0).Rotated(new Vector3(0, 1, 0), (float)yRot).Rotated(new Vector3(1, 0, 0), (float)xRot);
+            var topRight = new Vector3((float)(1 * _thicknessX), (float)(-1 * _thicknessY), 0).Rotated(new Vector3(0, 1, 0), (float)yRot).Rotated(new Vector3(1, 0, 0), (float)xRot);
+            var bottomLeft = new Vector3((float)(-1 * _thicknessX), (float)(1 * _thicknessY), 0).Rotated(new Vector3(0, 1, 0), (float)yRot).Rotated(new Vector3(1, 0, 0), (float)xRot);
+            var bottomRight = new Vector3((float)(1 * _thicknessX), (float)(1 * _thicknessY), 0).Rotated(new Vector3(0, 1, 0), (float)yRot).Rotated(new Vector3(1, 0, 0), (float)xRot);
 
             var vertices = new List<Vector3>
             {
