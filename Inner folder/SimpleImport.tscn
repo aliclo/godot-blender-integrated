@@ -2,12 +2,12 @@
 
 [ext_resource type="Script" path="res://addons/Pipelines/PipeContext.cs" id="1_vsb3i"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_emn1i"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gncf0"]
 resource_name = "Material.002"
 cull_mode = 2
 roughness = 0.604545
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_xony7"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_pbuf0"]
 _surfaces = [{
 "aabb": AABB(-9.00001, -40, -180, 18, 46, 360),
 "format": 34896613377,
@@ -21,7 +21,7 @@ _surfaces = [{
 }]
 blend_shape_mode = 0
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_yxase"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_f3acj"]
 resource_name = "Big Step Platforms_Cube_003"
 _surfaces = [{
 "aabb": AABB(-9.00001, -40, -180, 18, 46, 360),
@@ -29,7 +29,7 @@ _surfaces = [{
 "format": 34896613399,
 "index_count": 144,
 "index_data": PackedByteArray("FgAIAAIAFgAFAAgABAAQAAYABAAOABAADAAJAA8ADAAdAAkAAwAeAA0AAwAVAB4AEQABAAcAEQALAAEAFQA0AB4AFQAoADQAIQATABgAIQAcABMAKAAuADQAKAAiAC4ANwAmACsANwAyACYAGwAqABIAGwA2ACoACgAXAAAACgAgABcAOAAZABQAOAACABkAGgAJADkAGgAfAAkACQAzADkACQAdADMAAgApABYAAgA4ACkAOQA8ABoAOQBAADwAFAA/ADgAFAA7AD8ALAA7ABQALAAnADsAMAAaADwAMAA1ABoAMwBAADkAMwAtAEAAJAA4AD8AJAApADgAIwBBAC8AIwA+AEEAPgA9AEEAPgA6AD0AMQA6ACUAMQA9ADoA"),
-"material": SubResource("StandardMaterial3D_emn1i"),
+"material": SubResource("StandardMaterial3D_gncf0"),
 "name": "Material.002",
 "primitive": 3,
 "uv_scale": Vector4(7.55883, 11.1944, 0, 0),
@@ -37,13 +37,19 @@ _surfaces = [{
 "vertex_data": PackedByteArray("/v+a3qqqAID+/5reqqr/v/7/mt6qqv+///8AAP///z///wAA//8AgP//AAD///+///+a3v//AID//5re////v///mt7///+/AACa3qqqAAAAAJreqqoAgAAAmt6qqv+/AAAAAP//AAAAAAAA////PwAAAAD//wCAAACa3v//AAAAAJre//8AgAAAmt7///+//v9M71VVAID+/0zvVVX/v/7/TO9VVf+//v8AAKqq/z/+/wAAqqr/v/7/TO+qqgCA/v9M76qq/7/+/0zvqqr/vwAATO9VVQAAAABM71VVAIAAAEzvVVX/vwAAAACqqgAAAAAAAKqq/z8AAEzvqqoAAAAATO+qqgCAAABM76qq/7/+/wAAAAD/P/7/AAAAAAAA/v8AAAAA/7/+////AAAAAP7///8AAP+//v///wAA/7/+/wAAVVX/P/7/AABVVf+//v///1VVAID+////VVX/v/7///9VVf+/AAAAAAAAAAAAAAAAAAD/PwAAAAAAAAAAAAD//wAAAAAAAP//AAAAAAAA//8AAP+/AAAAAFVVAAAAAAAAVVX/PwAA//9VVQAAAAD//1VVAIAAAP//VVX/v/7/mt5VVf+/AACa3lVVAAD+/0zvAAAAAP7/TO8AAP+/AABM7wAAAAAAAEzvAAAAAP7/mt4AAAAA/v+a3gAA/78AAJreAAAAAAAAmt4AAAAA/3///////3//fwAAAAD/f/9/////fwAA/3///////3//fwAA/z//f/9///////9//z//fwAA/3//f////z//f/9///////9//3///////3//fwAAAAD/f/9/AAD/f///////f/9/AAD/P/9//3///////3//P/9/AAD/f/8//3//f///////fwAA/3////9//38AAP///3////9//38AAAAA/3//fwAA/3///////3//fwAA/z//fwAA/3////9//z//f////3////9//z//fwAA/3//P/9//3///////3//fwAA/z//f////3//fwAA/z//f////3////9//38AAP8//3////9/")
 }]
 blend_shape_mode = 0
-shadow_mesh = SubResource("ArrayMesh_xony7")
+shadow_mesh = SubResource("ArrayMesh_pbuf0")
 
 [node name="SimpleImport" type="Node3D"]
 
 [node name="PipeContext" type="Node" parent="."]
 script = ExtResource("1_vsb3i")
 
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(0.893309, 0, 0.449444, 0, 1, 0, -0.449444, 0, 0.893309, 264.969, 0, 441.307)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.0877351, 0.937937, 0.335524, -0.237281, 0.346805, -0.907427, -0.967471, 0, 0.252981, -230.301, 319.018, 150.898)
+
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-mesh = SubResource("ArrayMesh_yxase")
+mesh = SubResource("ArrayMesh_f3acj")
 skeleton = NodePath("")

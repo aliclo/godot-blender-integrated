@@ -1,6 +1,6 @@
-[gd_scene load_steps=6 format=4 uid="uid://lfvuienvu0dk"]
+[gd_scene load_steps=6 format=4 uid="uid://ldtvm82xkrw7"]
 
-[ext_resource type="Script" path="res://addons/Pipelines/PipeContext.cs" id="1_jmf0e"]
+[ext_resource type="Script" path="res://addons/Pipelines/PipeContext.cs" id="1_h8c6p"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_j6jne"]
 resource_name = "Material"
@@ -48,7 +48,7 @@ data = PackedVector3Array(-2.86102e-06, -3.90181, -19.6157, 3.9018, -8.58307e-06
 [node name="CopiedContext" type="Node3D"]
 
 [node name="PipeContext" type="Node" parent="."]
-script = ExtResource("1_jmf0e")
+script = ExtResource("1_h8c6p")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -56.5478, 77.9386, -7.5613e-06)
