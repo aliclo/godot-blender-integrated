@@ -3,7 +3,6 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 [Tool]
 public partial class SceneModelNode : PipelineNode, IInputPipe
@@ -12,23 +11,14 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
     public enum Connections
     {
         Mesh,
-        PhysicsBody,
         CollisionShape,
         AnimationPlayer
-    }
-
-    public enum PhysicsTypes
-    {
-        Static,
-        Animatable,
-        Rigid
     }
 
     private class BlendNodes
     {
         public MeshInstance3D Mesh { get; set; }
         public CollisionShape3D CollisionShape { get; set; }
-        public PhysicsBody3D PhysicsBody { get; set; }
         public AnimationPlayer AnimationPlayer { get; set; }
     }
 
@@ -36,8 +26,6 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
     {
         [Export]
         public string ChosenScene { get; set; }
-        [Export]
-        public int PhysicsOption { get; set; }
     }
 
     private const string MESH_INSTANCE_3D_NAME = nameof(MeshInstance3D);
@@ -63,15 +51,11 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
 
     private PipeContext _context;
     private EditorResourcePicker _sceneModelPicker;
-    private OptionButton _physicsBodyOption;
     private SceneModelNodeStore _sceneModelNodeStore;
 
     private List<IReceivePipe> _meshPipes = new List<IReceivePipe>();
-    private List<IReceivePipe> _physicsBodyPipes = new List<IReceivePipe>();
     private List<IReceivePipe> _collisionShapePipes = new List<IReceivePipe>();
     private List<IReceivePipe> _animationPlayerPipes = new List<IReceivePipe>();
-
-    private PhysicsTypes _physicsType;
 
     private List<List<IReceivePipe>> _nodeConnections;
     public override List<List<IReceivePipe>> NodeConnections => _nodeConnections;
@@ -86,9 +70,6 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         {
             case Connections.Mesh:
                 AddMeshConnections(receivePipes);
-                break;
-            case Connections.PhysicsBody:
-                AddPhysicsBodyConnections(receivePipes);
                 break;
             case Connections.CollisionShape:
                 AddCollisionShapeConnections(receivePipes);
@@ -109,9 +90,6 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
             case Connections.Mesh:
                 ConnectMesh(receivePipes);
                 break;
-            case Connections.PhysicsBody:
-                ConnectPhyisicsBody(receivePipes);
-                break;
             case Connections.CollisionShape:
                 ConnectCollisionShape(receivePipes);
                 break;
@@ -131,9 +109,6 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
             case Connections.Mesh:
                 DisconnectMesh(receivePipes);
                 break;
-            case Connections.PhysicsBody:
-                DisconnectPhyisicsBody(receivePipes);
-                break;
             case Connections.CollisionShape:
                 DisconnectCollisionShape(receivePipes);
                 break;
@@ -146,11 +121,6 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
     private void AddMeshConnections(IEnumerable<IReceivePipe> receivePipes)
     {
         _meshPipes.AddRange(receivePipes);
-    }
-
-    private void AddPhysicsBodyConnections(IEnumerable<IReceivePipe> receivePipes)
-    {
-        _physicsBodyPipes.AddRange(receivePipes);
     }
 
     private void AddCollisionShapeConnections(IEnumerable<IReceivePipe> receivePipes)
@@ -188,37 +158,6 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
     private void DisconnectMesh(IList<IReceivePipe> receivePipes)
     {
         _meshPipes.RemoveAll(rp => receivePipes.Contains(rp));
-
-        var destinationHelper = new DestinationHelper();
-        destinationHelper.RemoveReceivePipes(receivePipes);
-    }
-
-    private void ConnectPhyisicsBody(IList<IReceivePipe> receivePipes)
-    {
-        _physicsBodyPipes.AddRange(receivePipes);
-
-        if (_sceneModelPicker.EditedResource != null)
-        {
-            BlendNodes blendNodes = null;
-
-            try
-            {
-                blendNodes = RetrieveBlendSceneNodes();
-            }
-            catch (InvalidOperationException e)
-            {
-                GD.PrintErr(e.Message);
-            }
-
-            var destinationHelper = new DestinationHelper();
-            var pipeValue = blendNodes?.PhysicsBody == null ? null : new PipeValue() { Value = blendNodes.PhysicsBody };
-            destinationHelper.AddReceivePipes(_context, PHYSICS_BODY_3D_NAME, receivePipes, blendNodes?.PhysicsBody == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
-        }
-    }
-
-    private void DisconnectPhyisicsBody(IList<IReceivePipe> receivePipes)
-    {
-        _physicsBodyPipes.RemoveAll(rp => receivePipes.Contains(rp));
 
         var destinationHelper = new DestinationHelper();
         destinationHelper.RemoveReceivePipes(receivePipes);
@@ -290,8 +229,7 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
     {
         return GodotJsonParser.ToJsonType(new SceneModelNodeStore()
         {
-            ChosenScene = _sceneModelPicker.EditedResource?.ResourcePath,
-            PhysicsOption = _physicsBodyOption.GetSelectedId()
+            ChosenScene = _sceneModelPicker.EditedResource?.ResourcePath
         });
     }
 
@@ -318,20 +256,13 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         SetSlotEnabledRight(1, true);
         SetSlotTypeRight(1, (int)PipelineNodeTypes.Any);
         SetSlotColorRight(1, TypeConnectorColors.ANY);
-        var physicsBody = new Label();
-        physicsBody.Text = "PhysicsBody";
-        AddChild(physicsBody);
-
-        SetSlotEnabledRight(2, true);
-        SetSlotTypeRight(2, (int)PipelineNodeTypes.Any);
-        SetSlotColorRight(2, TypeConnectorColors.ANY);
         var collisionShapeLabel = new Label();
         collisionShapeLabel.Text = "CollisionShape";
         AddChild(collisionShapeLabel);
 
-        SetSlotEnabledRight(3, true);
-        SetSlotTypeRight(3, (int)PipelineNodeTypes.Any);
-        SetSlotColorRight(3, TypeConnectorColors.ANY);
+        SetSlotEnabledRight(2, true);
+        SetSlotTypeRight(2, (int)PipelineNodeTypes.Any);
+        SetSlotColorRight(2, TypeConnectorColors.ANY);
         var animationPlayerLabel = new Label();
         animationPlayerLabel.Text = "AnimationPlayer";
         AddChild(animationPlayerLabel);
@@ -342,31 +273,12 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         ImportEventer.Instance.SceneImportUpdated += SceneUpdated;
         AddChild(_sceneModelPicker);
 
-        var physicsBodyOptions = new List<string>() {
-            "Static",
-            "Animatable",
-            "Rigid"
-        };
-
-        _physicsBodyOption = new OptionButton();
-
-        foreach (var option in physicsBodyOptions)
-        {
-            _physicsBodyOption.AddItem(option);
-        }
-
-        _physicsBodyOption.ItemSelected += PhysicsBodyOptionChosen;
-
-        AddChild(_physicsBodyOption);
-
         if (_sceneModelNodeStore != null)
         {
             if (_sceneModelNodeStore.ChosenScene != null)
             {
                 _sceneModelPicker.EditedResource = GD.Load<Resource>(_sceneModelNodeStore.ChosenScene);
             }
-
-            _physicsBodyOption.Select(_sceneModelNodeStore.PhysicsOption);
         }
     }
 
@@ -385,7 +297,6 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
 
         var mesh = blendNodes.Mesh;
         var collisionShape = blendNodes.CollisionShape;
-        var body = blendNodes.PhysicsBody;
         var animationPlayer = blendNodes.AnimationPlayer;
 
         foreach (var meshPipe in _meshPipes)
@@ -393,13 +304,6 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
             meshPipe.PreRegister(MESH_INSTANCE_3D_NAME);
             var pipeValue = new PipeValue() { Value = mesh, TouchedProperties = MESH_TOUCHED_PROPERTIES };
             _context.RegisterPipe(new ValuePipe() { Pipe = meshPipe, CloneablePipeValue = new CloneablePipeValue() { PipeValue = pipeValue } });
-        }
-
-        foreach (var physicsBodyPipe in _physicsBodyPipes)
-        {
-            physicsBodyPipe.PreRegister(PHYSICS_BODY_3D_NAME);
-            var pipeValue = new PipeValue() { Value = body };
-            _context.RegisterPipe(new ValuePipe() { Pipe = physicsBodyPipe, CloneablePipeValue = new CloneablePipeValue() { PipeValue = pipeValue } });
         }
 
         foreach (var collisionShapePipe in _collisionShapePipes)
@@ -469,63 +373,12 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
 
         importedScene.QueueFree();
 
-
-        PhysicsBody3D body;
-
-        if (_physicsType == PhysicsTypes.Static)
-        {
-            body = staticBody;
-        }
-        else if (_physicsType == PhysicsTypes.Animatable)
-        {
-            var animatableBody3D = Replace<StaticBody3D, AnimatableBody3D>(staticBody);
-            body = animatableBody3D;
-        }
-        else
-        {
-            body = Replace<PhysicsBody3D, RigidBody3D>(staticBody);
-        }
-
         return new BlendNodes()
         {
             Mesh = mesh,
             CollisionShape = collisionShape,
-            PhysicsBody = body,
             AnimationPlayer = animationPlayer
         };
-    }
-
-    private TReplaceNode Replace<TOriganalNode, TReplaceNode>(TOriganalNode original)
-            where TOriganalNode : Node
-            where TReplaceNode : TOriganalNode
-    {
-
-        original.Owner = null;
-
-        var replaceNode = Activator.CreateInstance<TReplaceNode>();
-
-        var originalProps = typeof(TOriganalNode)
-            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => p.CanRead && p.CanWrite)
-            .Where(p => !p.Name.StartsWith("Global"))
-            .ToList();
-
-        foreach (var originalProp in originalProps)
-        {
-            originalProp.SetValue(replaceNode, originalProp.GetValue(original));
-        }
-
-        foreach (var child in original.GetChildren())
-        {
-            original.RemoveChild(child);
-            child.Owner = null;
-            replaceNode.AddChild(child);
-            child.Owner = replaceNode;
-        }
-
-        original.Free();
-
-        return replaceNode;
     }
 
     private void SceneChanged(Resource scene)
@@ -540,11 +393,6 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         {
             _context?.Reprocess();
         }
-    }
-
-    private void PhysicsBodyOptionChosen(long index)
-    {
-        _context?.Reprocess();
     }
 
     public override void DisposePipe()
