@@ -217,7 +217,7 @@ public partial class PipelineGraph : GraphEdit
         EditorInterface.Singleton.MarkSceneAsUnsaved();
     }
 
-    private void HandleDeleteNodesRequest(Array nodeNames)
+    private void HandleDeleteNodesRequest(Array<StringName> nodeNames)
     {
         var nodes = new Array<PipelineNode>(nodeNames
             .Select(name => _context.PipelineNodeDict[(string)name]));

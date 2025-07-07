@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://c1tnpg51gwlu8"]
 
-[ext_resource type="Script" path="res://addons/Pipelines/Nodes/SceneModelNode.cs" id="1_586ow"]
+[ext_resource type="Script" uid="uid://b2jfmdoxhp73d" path="res://addons/Pipelines/Nodes/SceneModelNode.cs" id="1_586ow"]
 
 [node name="SceneModelNode" type="GraphNode"]
 offset_right = 106.0

@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://bc0obiwcnhw3j"]
 
-[ext_resource type="Script" path="res://addons/Pipelines/PipelineEditor.cs" id="1_imefo"]
-[ext_resource type="Script" path="res://addons/Pipelines/PipelineGraph.cs" id="1_wqkpw"]
+[ext_resource type="Script" uid="uid://clmwaej57gosy" path="res://addons/Pipelines/PipelineEditor.cs" id="1_imefo"]
+[ext_resource type="Script" uid="uid://df3h41lmyg7r3" path="res://addons/Pipelines/PipelineGraph.cs" id="1_wqkpw"]
 
 [node name="PipelineEditor" type="Control"]
 layout_mode = 3

@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://cegy2g8ugm8av"]
 
-[ext_resource type="Script" path="res://addons/Pipelines/Nodes/EdgifyNode.cs" id="1_dpx61"]
+[ext_resource type="Script" uid="uid://btlpvilqgsitu" path="res://addons/Pipelines/Nodes/EdgifyNode.cs" id="1_dpx61"]
 
 [node name="EdgeifyNode" type="GraphNode"]
 offset_right = 200.0

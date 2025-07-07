@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://mb3sky5b37a2"]
 
-[ext_resource type="Script" path="res://addons/Pipelines/Nodes/OutputNode.cs" id="1_382o0"]
+[ext_resource type="Script" uid="uid://e5kn26nnndpt" path="res://addons/Pipelines/Nodes/OutputNode.cs" id="1_382o0"]
 
 [node name="OutputNode" type="GraphNode"]
 offset_right = 153.0
