@@ -49,6 +49,10 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         nameof(CollisionShape3D.Shape).ToLower()
     };
 
+    private static readonly List<string> ANIMATION_PLAYER_TOUCHED_PROPERTIES = new List<string>() {
+        
+    };
+
     private PipeContext _context;
     private EditorResourcePicker _sceneModelPicker;
     private SceneModelNodeStore _sceneModelNodeStore;
@@ -182,7 +186,7 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
 
             var destinationHelper = new DestinationHelper();
             var pipeValue = blendNodes?.CollisionShape == null ? null : new PipeValue() { Value = blendNodes.CollisionShape, TouchedProperties = COLLISION_SHAPE_TOUCHED_PROPERTIES };
-            destinationHelper.AddReceivePipes(_context, ANIMATION_PLAYER_NAME, receivePipes, blendNodes?.CollisionShape == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
+            destinationHelper.AddReceivePipes(_context, COLLISION_SHAPE_3D_NAME, receivePipes, blendNodes?.CollisionShape == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
         }
     }
 
@@ -212,7 +216,7 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
             }
 
             var destinationHelper = new DestinationHelper();
-            var pipeValue = blendNodes?.AnimationPlayer == null ? null : new PipeValue() { Value = blendNodes.AnimationPlayer };
+            var pipeValue = blendNodes?.AnimationPlayer == null ? null : new PipeValue() { Value = blendNodes.AnimationPlayer, TouchedProperties = ANIMATION_PLAYER_TOUCHED_PROPERTIES };
             destinationHelper.AddReceivePipes(_context, ANIMATION_PLAYER_NAME, receivePipes, blendNodes?.AnimationPlayer == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
         }
     }
@@ -242,7 +246,7 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
     {
         _context = context;
 
-        _nodeConnections = Enumerable.Range(0, 4)
+        _nodeConnections = Enumerable.Range(0, 3)
             .Select(n => new List<IReceivePipe>())
             .ToList();
 
@@ -316,7 +320,7 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         foreach (var animationPlayerPipe in _animationPlayerPipes)
         {
             animationPlayerPipe.PreRegister(ANIMATION_PLAYER_NAME);
-            var pipeValue = new PipeValue() { Value = animationPlayer };
+            var pipeValue = new PipeValue() { Value = animationPlayer, TouchedProperties = ANIMATION_PLAYER_TOUCHED_PROPERTIES };
             _context.RegisterPipe(new ValuePipe() { Pipe = animationPlayerPipe, CloneablePipeValue = new CloneablePipeValue() { PipeValue = pipeValue } });
         }
     }
@@ -340,7 +344,7 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         var importedScene = scene.Instantiate<Node3D>();
         var mesh = importedScene.GetChild<MeshInstance3D>(0);
         var animationPlayer = importedScene.GetNodeOrNull<AnimationPlayer>(AnimationPlayerPath);
-
+        
         var staticBody = mesh.GetNodeOrNull<StaticBody3D>(StaticBody3DPath);
         var collisionShape = staticBody?.GetNodeOrNull<CollisionShape3D>(CollisionShape3DPath);
 
