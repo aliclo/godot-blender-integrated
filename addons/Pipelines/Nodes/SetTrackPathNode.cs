@@ -150,7 +150,7 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
         return new PipeValue()
         {
             Value = _animationPlayer.Duplicate(),
-            TouchedProperties = TOUCHED_PROPERTIES
+            TouchedProperties = pipeValue.TouchedProperties.Union(TOUCHED_PROPERTIES).ToList()
         };
     }
 
