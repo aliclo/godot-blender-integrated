@@ -377,7 +377,15 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
             animationPlayer.Owner = null;
 
             var animation = animationPlayer.GetAnimation(animationPlayer.GetAnimationList()[0]);
-            animation.TrackSetImported(0, false);
+
+            if (animation.GetTrackCount() > 0)
+            {
+                animation.TrackSetImported(0, false);
+            }
+            else
+            {
+                GD.PrintErr($"Animation {animation} has no tracks from scene {scene.ResourceName} for {nameof(SceneModelNode)} node {Name}");
+            }
         }
 
         importedScene.QueueFree();
