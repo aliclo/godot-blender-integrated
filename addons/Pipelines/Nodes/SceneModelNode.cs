@@ -380,7 +380,10 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
 
             if (animation.GetTrackCount() > 0)
             {
-                animation.TrackSetImported(0, false);
+                for (int ti = 0; ti < animation.GetTrackCount(); ti++)
+                {
+                    animation.TrackSetImported(ti, false);
+                }
             }
             else
             {
