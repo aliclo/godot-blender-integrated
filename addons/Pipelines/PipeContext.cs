@@ -16,15 +16,21 @@ public partial class PipeContext : Node
         public int CurrentProgress { get; set; } = 0;
     }
 
+    private class NodeDependency
+    {
+        public PipelineNode Node { get; set; }
+        public IReceivePipe Dependency { get; set; }
+    }
+
     public Node RootNode => this;
-    public List<OutputNode> OrderOfCreation { get; set; }
-    public System.Collections.Generic.Dictionary<string, object> ContextData { get; set; }
+    public List<OutputNode> OutputNodes { get; set; }
     public System.Collections.Generic.Dictionary<string, PipelineNode> PipelineNodeDict => _pipelineNodeDict;
 
     private readonly PipelineAccess _pipelineAccess = new PipelineAccess();
     private readonly PipeMapper _pipeMapper = new PipeMapper();
     private System.Collections.Generic.Dictionary<string, PipelineNode> _pipelineNodeDict = new System.Collections.Generic.Dictionary<string, PipelineNode>();
     private List<NodePipes> _nodePipesList;
+    private List<NodeDependency> _nodeDependencies;
     private bool _completedFirstImport = false;
 
     public override void _Ready()
@@ -193,47 +199,20 @@ public partial class PipeContext : Node
 
     private List<NodePipes> OrderEvaluation(List<NodePipes> nodePipesList)
     {
-        // When determining processing, there are two types:
-        // - 1. Ones that can be done directly without any dependency as they are done singly
-        // - 2. Ones that are done together and need to be done within an order
-        // For (2) we can therefore generate this ordering for cleanup and piping
         var nodePipesOrdering = new List<NodePipes>();
         var evaluateNodePipes = new List<NodePipes>(nodePipesList);
+        var processedPipes = new List<IReceivePipe>();
+
         while (evaluateNodePipes.Any())
         {
-            if (evaluateNodePipes.Any(p => OrderOfCreation.Contains(p.CurrentNodePipe)))
-            {
-                if (OrderOfCreation.All(ooc => evaluateNodePipes.Select(eoop => eoop.CurrentNodePipe).Contains(ooc)))
-                {
-                    var orderOfEvaluation = OrderOfCreation
-                        .Select(oocp => evaluateNodePipes.Single(eoop => eoop.CurrentNodePipe == oocp))
-                        .ToList();
+            var pipesToProcess = evaluateNodePipes
+                .Where(p => !_nodeDependencies.Any(nd => p.CurrentNodePipe == nd.Node && !processedPipes.Contains(nd.Dependency)));
 
-                    foreach (var p in orderOfEvaluation)
-                    {
-                        nodePipesOrdering.Add(p);
-                        p.CurrentProgress++;
-                    }
-                }
-                else
-                {
-                    var pipesToProcess = evaluateNodePipes
-                        .Where(p => !OrderOfCreation.Contains(p.CurrentNodePipe));
-
-                    foreach (var p in pipesToProcess)
-                    {
-                        nodePipesOrdering.Add(p);
-                        p.CurrentProgress++;
-                    }
-                }
-            }
-            else
+            foreach (var p in pipesToProcess)
             {
-                foreach (var p in evaluateNodePipes)
-                {
-                    nodePipesOrdering.Add(p);
-                    p.CurrentProgress++;
-                }
+                nodePipesOrdering.Add(p);
+                processedPipes.Add(p.CurrentNodePipe);
+                p.CurrentProgress++;
             }
 
             evaluateNodePipes.RemoveAll(p => p.CurrentProgress == p.Pipes.Count);
@@ -260,12 +239,15 @@ public partial class PipeContext : Node
 
     private void Process()
     {
+        OutputNodes = _pipelineNodeDict.Values
+            .Where(n => n is OutputNode)
+            .Select(n => (OutputNode)n)
+            .ToList();
+
         var inputPipes = _pipelineNodeDict.Values
             .Where(n => n is IInputPipe)
             .Select(n => (IInputPipe)n);
 
-        OrderOfCreation = new List<OutputNode>();
-        ContextData = new System.Collections.Generic.Dictionary<string, object>();
         _nodePipesList = new List<NodePipes>();
 
         foreach (var inputPipe in inputPipes)
@@ -280,6 +262,12 @@ public partial class PipeContext : Node
                 pipe.Register();
             }
         }
+        
+        _nodeDependencies = _pipelineNodeDict.Values
+            .SelectMany(pn => pn.NodeDependencies.Select(nd => new { Node = pn, NodeDependencyPath = nd }))
+            .Select(pn => new NodeDependency { Node = pn.Node, Dependency = OutputNodes.SingleOrDefault(on => on.AbsoluteDestinationIncludingNode == pn.NodeDependencyPath) })
+            .Where(pn => pn.Dependency != null)
+            .ToList();
 
         var nodePipesOrdering = OrderEvaluation(_nodePipesList);
 

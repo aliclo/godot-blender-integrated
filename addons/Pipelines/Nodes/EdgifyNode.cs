@@ -74,6 +74,9 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
     private List<List<IReceivePipe>> _nodeConnections;
     public override List<List<IReceivePipe>> NodeConnections => _nodeConnections;
 
+    public override List<NodePath> NodeDependencies => new List<NodePath>();
+
+
     public override Variant GetData()
     {
         return GodotJsonParser.ToJsonType(new EdgifyNodeStore()

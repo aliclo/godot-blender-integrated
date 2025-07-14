@@ -7,6 +7,7 @@ public abstract partial class PipelineNode : GraphNode, IPipe, IStorable
     public static readonly List<List<IReceivePipe>> EMPTY_NODE_CONNECTIONS = new List<List<IReceivePipe>>();
 
     public abstract List<List<IReceivePipe>> NodeConnections { get; }
+    public abstract List<NodePath> NodeDependencies { get; }
     public abstract void Init(PipeContext pipeContext);
     public abstract void AddConnection(int index, List<IReceivePipe> receivePipes);
 

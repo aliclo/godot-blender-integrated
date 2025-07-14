@@ -28,17 +28,19 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
 
     private AnimationPlayer _animationPlayer;
     private string _nodeName;
-    private Node _targetNode;
+    private NodePath _targetNodePath;
+    private List<NodePath> _nodeDependencies;
 
     public List<IReceivePipe> NextPipes { get; set; } = new List<IReceivePipe>();
     private List<List<IReceivePipe>> _nodeConnections;
     public override List<List<IReceivePipe>> NodeConnections => _nodeConnections;
+    public override List<NodePath> NodeDependencies => _nodeDependencies;
 
     public override Variant GetData()
     {
         return GodotJsonParser.ToJsonType(new SetTrackPathNodeStore()
         {
-            TrackPath = _context.RootNode.GetPathTo(_targetNode)
+            TrackPath = _targetNodePath
         });
     }
 
@@ -83,7 +85,7 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
         if (_setTrackPathNodeStore != null)
         {
             _outputNodePicker.Text = _setTrackPathNodeStore.TrackPath;
-            _targetNode = _context.RootNode.GetNode(_setTrackPathNodeStore.TrackPath);
+            _targetNodePath = _setTrackPathNodeStore.TrackPath;
         }
         else
         {
@@ -93,6 +95,13 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
 
     public void Register()
     {
+        _nodeDependencies = new List<NodePath>();
+
+        if (_targetNodePath != null && !_targetNodePath.IsEmpty)
+        {
+            _nodeDependencies.Add(_targetNodePath);
+        }
+
         foreach (var pipe in NextPipes)
         {
             pipe.Register();
@@ -123,10 +132,19 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
         var newAnimationPlayer = (AnimationPlayer) animationPlayer.Duplicate();
         _animationPlayer = newAnimationPlayer;
 
-        if (_targetNode != null)
+        if (_targetNodePath != null && !_targetNodePath.IsEmpty)
         {
-            var animationName = _animationPlayer.GetAnimationList().First();
-            _animationPlayer.GetAnimation(animationName).TrackSetPath(0, _targetNode.GetPath());
+            var targetNode = _context.RootNode.GetNodeOrNull(_targetNodePath);
+
+            if (targetNode != null)
+            {
+                var animationName = _animationPlayer.GetAnimationList().First();
+                _animationPlayer.GetAnimation(animationName).TrackSetPath(0, targetNode.GetPath());
+            }
+            else
+            {
+                GD.PrintErr("Target node doesn't exist for ", nameof(SetTrackPathNode), " '", _targetNodePath, "'");
+            }
         }
 
         return new PipeValue()
@@ -163,8 +181,8 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
 
             if (newlyChosenParentNode != null)
             {
-                _targetNode = newlyChosenParentNode;
-                _outputNodePicker.Text = _context.RootNode.GetPathTo(_targetNode);
+                _targetNodePath = _context.RootNode.GetPathTo(newlyChosenParentNode);
+                _outputNodePicker.Text = _targetNodePath;
 
                 var cloneableAnimationPlayer = new CloneablePipeValue()
                 {
@@ -177,6 +195,10 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
 
                 var valuePipe = new ValuePipe() { Pipe = this, CloneablePipeValue = cloneableAnimationPlayer };
                 _context.ReprocessPipe([valuePipe]);
+            }
+            else
+            {
+                GD.PrintErr("Target node doesn't exist for ", nameof(SetTrackPathNode), " '", _targetNodePath, "'");
             }
         }
         

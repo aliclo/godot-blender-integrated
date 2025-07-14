@@ -63,6 +63,7 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
 
     private List<List<IReceivePipe>> _nodeConnections;
     public override List<List<IReceivePipe>> NodeConnections => _nodeConnections;
+    public override List<NodePath> NodeDependencies => new List<NodePath>();
 
 
     public override void AddConnection(int index, List<IReceivePipe> receivePipes)

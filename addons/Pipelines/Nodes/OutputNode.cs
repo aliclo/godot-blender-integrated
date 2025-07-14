@@ -59,6 +59,7 @@ public partial class OutputNode : PipelineNode, IReceivePipe
     private Node _node;
     private List<Node> _previousNodeChildren;
     private List<NodeProp> _previousNodeProps;
+    private List<NodePath> _nodeDependencies;
 
     public List<IReceivePipe> NextPipes => null;
 
@@ -87,6 +88,8 @@ public partial class OutputNode : PipelineNode, IReceivePipe
     }
 
     public override List<List<IReceivePipe>> NodeConnections => EMPTY_NODE_CONNECTIONS;
+
+    public override List<NodePath> NodeDependencies => _nodeDependencies;
 
     public override Variant GetData()
     {
@@ -129,7 +132,12 @@ public partial class OutputNode : PipelineNode, IReceivePipe
 
     public void Register()
     {
-        SetOrder();
+        _nodeDependencies = new List<NodePath>();
+
+        if (AbsoluteDestination != null && !AbsoluteDestination.IsEmpty)
+        {
+            _nodeDependencies.Add(AbsoluteDestination);
+        }
 
         _node = _context.RootNode.GetNodeOrNull(_destination + "/" + _nodeName);
         if (_node != null)
@@ -141,21 +149,6 @@ public partial class OutputNode : PipelineNode, IReceivePipe
     public void PreRegister(string nodeName)
     {
         _nodeName = nodeName;
-
-        HashSet<OutputNode> outputNodes;
-        bool exists = _context.ContextData.TryGetValue(nameof(OutputNode), out object outputNodesObj);
-
-        if (exists)
-        {
-            outputNodes = (HashSet<OutputNode>)outputNodesObj;
-        }
-        else
-        {
-            outputNodes = new HashSet<OutputNode>();
-            _context.ContextData[nameof(OutputNode)] = outputNodes;
-        }
-
-        outputNodes.Add(this);
     }
 
     public PipeValue Pipe(PipeValue pipeValue)
@@ -212,7 +205,7 @@ public partial class OutputNode : PipelineNode, IReceivePipe
             .Select(n => new NodeProp() { Name = n, Value = previousNode.Get(n) })
             .ToList();
 
-        var outputNodes = (HashSet<OutputNode>)_context.ContextData[nameof(OutputNode)];
+        var outputNodes = _context.OutputNodes;
         var outputNodePaths = outputNodes.Select(on => on.AbsoluteDestinationIncludingNode);
         _previousNodeChildren = previousNode.GetChildren().Where(c => !outputNodePaths.Contains(_context.GetPathTo(c))).ToList();
     }
@@ -234,10 +227,6 @@ public partial class OutputNode : PipelineNode, IReceivePipe
     public void PipeDisconnect()
     {
         Clean();
-        _context.OrderOfCreation.Remove(this);
-
-        var nodeOutputs = (HashSet<OutputNode>) _context.ContextData[nameof(OutputNode)];
-        nodeOutputs.Remove(this);
     }
 
     private void OutputNodePickerPressed()
@@ -253,62 +242,14 @@ public partial class OutputNode : PipelineNode, IReceivePipe
 
             if (newlyChosenParentNode != null)
             {
-                if (_node != null)
-                {
-                    var nodeParent = _node.GetParent();
-                    if (nodeParent != null)
-                    {
-                        nodeParent.RemoveChild(_node);
-                    }
-                }
-
                 _destination = _context.RootNode.GetPathTo(newlyChosenParentNode);
                 _outputNodePicker.Text = _destination;
 
-                if (_node != null)
-                {
-                    newlyChosenParentNode.AddChild(_node);
-                    var owner = _context.RootNode?.Owner ?? _context.RootNode;
-                    _node.Owner = owner;
-                    SetOrder();
-                }
+                _context.Reprocess();
             }
         }
         
         EditorInterface.Singleton.MarkSceneAsUnsaved();
-    }
-    
-    private void SetOrder()
-    {
-        _context.OrderOfCreation.Remove(this);
-
-        if (AbsoluteDestination == null || AbsoluteDestination.IsEmpty)
-        {
-            return;
-        }
-
-        var outputNodes = (HashSet<OutputNode>)_context.ContextData[nameof(OutputNode)];
-
-        if (outputNodes.Any(no => no.AbsoluteDestinationIncludingNode == AbsoluteDestination || no.AbsoluteDestination == AbsoluteDestinationIncludingNode))
-        {
-            int indexOfParentNode = _context.OrderOfCreation.FindIndex(no => no.AbsoluteDestinationIncludingNode == AbsoluteDestination);
-            if (indexOfParentNode != -1)
-            {
-                _context.OrderOfCreation.Insert(indexOfParentNode + 1, this);
-            }
-            else
-            {
-                int indexOfChildNode = _context.OrderOfCreation.FindIndex(no => no.AbsoluteDestination == AbsoluteDestinationIncludingNode);
-                if (indexOfChildNode != -1)
-                {
-                    _context.OrderOfCreation.Insert(indexOfChildNode, this);
-                }
-                else
-                {
-                    _context.OrderOfCreation.Add(this);
-                }
-            }
-        }
     }
 
     public override void AddConnection(int index, List<IReceivePipe> receivePipes)
