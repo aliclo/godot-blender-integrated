@@ -29,7 +29,7 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
     private AnimationPlayer _animationPlayer;
     private string _nodeName;
     private NodePath _targetNodePath;
-    private List<NodePath> _nodeDependencies;
+    private List<NodePath> _nodeDependencies = new List<NodePath>();
 
     public List<IReceivePipe> NextPipes { get; set; } = new List<IReceivePipe>();
     private List<List<IReceivePipe>> _nodeConnections;

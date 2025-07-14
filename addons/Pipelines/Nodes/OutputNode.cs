@@ -59,7 +59,7 @@ public partial class OutputNode : PipelineNode, IReceivePipe
     private Node _node;
     private List<Node> _previousNodeChildren;
     private List<NodeProp> _previousNodeProps;
-    private List<NodePath> _nodeDependencies;
+    private List<NodePath> _nodeDependencies = new List<NodePath>();
 
     public List<IReceivePipe> NextPipes => null;
 

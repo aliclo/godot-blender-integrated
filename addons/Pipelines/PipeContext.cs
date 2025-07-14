@@ -201,12 +201,16 @@ public partial class PipeContext : Node
     {
         var nodePipesOrdering = new List<NodePipes>();
         var evaluateNodePipes = new List<NodePipes>(nodePipesList);
+        var nodesToBeProcessed = nodePipesList
+            .SelectMany(np => np.Pipes)
+            .Distinct();
+        
         var processedPipes = new List<IReceivePipe>();
 
         while (evaluateNodePipes.Any())
         {
             var pipesToProcess = evaluateNodePipes
-                .Where(p => !_nodeDependencies.Any(nd => p.CurrentNodePipe == nd.Node && !processedPipes.Contains(nd.Dependency)));
+                .Where(p => !_nodeDependencies.Any(nd => p.CurrentNodePipe == nd.Node && nodesToBeProcessed.Contains(nd.Dependency) && !processedPipes.Contains(nd.Dependency)));
 
             foreach (var p in pipesToProcess)
             {

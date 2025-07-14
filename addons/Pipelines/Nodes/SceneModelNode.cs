@@ -374,6 +374,9 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         {
             importedScene.RemoveChild(animationPlayer);
             animationPlayer.Owner = null;
+
+            var animation = animationPlayer.GetAnimation(animationPlayer.GetAnimationList()[0]);
+            animation.TrackSetImported(0, false);
         }
 
         importedScene.QueueFree();
