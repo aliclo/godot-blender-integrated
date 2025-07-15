@@ -158,6 +158,8 @@ public partial class PipeContext : Node
 
         var nodePipesOrdering = OrderEvaluation(nodePipes);
         EvaluateNodePipes(nodePipesOrdering);
+
+        EditorInterface.Singleton.SaveScene();
     }
 
     private IEnumerable<NodePipes> GetNodePipes(ValuePipe valuePipe)
@@ -276,6 +278,8 @@ public partial class PipeContext : Node
         var nodePipesOrdering = OrderEvaluation(_nodePipesList);
 
         EvaluateNodePipes(nodePipesOrdering);
+        
+        EditorInterface.Singleton.SaveScene();
     }
 
     protected override void Dispose(bool disposing)

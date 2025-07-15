@@ -50,7 +50,6 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
     };
 
     private static readonly List<string> ANIMATION_PLAYER_TOUCHED_PROPERTIES = new List<string>() {
-        "libraries",
         "assigned_animation"
     };
 
@@ -376,18 +375,33 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
             importedScene.RemoveChild(animationPlayer);
             animationPlayer.Owner = null;
 
-            var animation = animationPlayer.GetAnimation(animationPlayer.GetAnimationList()[0]);
+            var animationLibraries = new List<AnimationLibrary>();
 
-            if (animation.GetTrackCount() > 0)
+            foreach (var animationLibraryName in animationPlayer.GetAnimationLibraryList())
             {
-                for (int ti = 0; ti < animation.GetTrackCount(); ti++)
+                var animationLibrary = (AnimationLibrary) animationPlayer
+                    .GetAnimationLibrary(animationLibraryName)
+                    .Duplicate(true);
+
+                foreach (var animationName in animationLibrary.GetAnimationList())
                 {
-                    animation.TrackSetImported(ti, false);
+                    var animation = animationLibrary.GetAnimation(animationName);
+
+                    if (animation.GetTrackCount() > 0)
+                    {
+                        for (int ti = 0; ti < animation.GetTrackCount(); ti++)
+                        {
+                            animation.TrackSetImported(ti, false);
+                        }
+                    }
+                    else
+                    {
+                        GD.PrintErr($"Animation {animation} has no tracks from scene {scene.ResourceName} for {nameof(SceneModelNode)} node {Name}");
+                    }
                 }
-            }
-            else
-            {
-                GD.PrintErr($"Animation {animation} has no tracks from scene {scene.ResourceName} for {nameof(SceneModelNode)} node {Name}");
+
+                animationPlayer.RemoveAnimationLibrary(animationLibraryName);
+                animationPlayer.AddAnimationLibrary(animationLibraryName, animationLibrary);
             }
         }
 

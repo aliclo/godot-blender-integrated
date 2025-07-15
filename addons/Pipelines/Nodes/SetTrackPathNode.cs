@@ -138,12 +138,19 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
 
             if (targetNode != null)
             {
-                var animationName = _animationPlayer.GetAnimationList().First();
-                var animation = _animationPlayer.GetAnimation(animationName);
-
-                for (int ti = 0; ti < animation.GetTrackCount(); ti++)
+                foreach (var animationLibraryName in _animationPlayer.GetAnimationLibraryList())
                 {
-                    animation.TrackSetPath(ti, targetNode.GetPath());
+                    var animationLibrary = _animationPlayer.GetAnimationLibrary(animationLibraryName);
+
+                    foreach (var animationName in animationLibrary.GetAnimationList())
+                    {
+                        var animation = animationLibrary.GetAnimation(animationName);
+
+                        for (int ti = 0; ti < animation.GetTrackCount(); ti++)
+                        {
+                            animation.TrackSetPath(ti, targetNode.GetPath());
+                        }
+                    }
                 }
             }
             else
