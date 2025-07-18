@@ -50,7 +50,8 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
     };
 
     private static readonly List<string> ANIMATION_PLAYER_TOUCHED_PROPERTIES = new List<string>() {
-        "assigned_animation"
+        "assigned_animation",
+        "libraries"
     };
 
     private PipeContext _context;
