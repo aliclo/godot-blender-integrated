@@ -10,7 +10,17 @@ public class EqualityHelper
         return IsEqual(a, b, "");
     }
 
-    public string IsEqual(Variant a, Variant b, string path)
+    public void AssertEquals(Variant a, Variant b)
+    {
+        var mismatch = IsEqual(a, b);
+
+        if (mismatch != null)
+        {
+            throw new System.Exception(mismatch);
+        }
+    }
+
+    private string IsEqual(Variant a, Variant b, string path)
     {
         if (a.VariantType != b.VariantType)
         {
