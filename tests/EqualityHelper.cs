@@ -5,31 +5,21 @@ using Godot.Collections;
 public class EqualityHelper
 {
 
-    public bool IsEqual(Variant a, Variant b)
+    public string IsEqual(Variant a, Variant b)
     {
         return IsEqual(a, b, "");
     }
 
-    public void LogFalse(bool enabled, string message)
+    public string IsEqual(Variant a, Variant b, string path)
     {
-        if (enabled)
-        {
-            GD.Print(message);
-        }
-    }
-
-    public bool IsEqual(Variant a, Variant b, string path)
-    {
-        bool logsEnabled = path != null;
         if (a.VariantType != b.VariantType)
         {
-            LogFalse(logsEnabled, $"{path}: Variant type not equal: ${a.VariantType} != ${b.VariantType}");
-            return false;
+            return $"{path}: Variant type not equal: ${a.VariantType} != ${b.VariantType}";
         }
 
         if (a.Obj == b.Obj || a.Obj.Equals(b.Obj))
         {
-            return true;
+            return null;
         }
 
         var varType = a.VariantType;
@@ -40,13 +30,13 @@ public class EqualityHelper
             var arrayB = (Array)b;
             if (arrayA.Count != arrayB.Count)
             {
-                LogFalse(logsEnabled, $"{path}: Array count mismatch: ${arrayA.Count} != ${arrayB.Count}");
-                return false;
+                return $"{path}: Array count mismatch: ${arrayA.Count} != ${arrayB.Count}";
             }
 
             return arrayA.Zip(arrayB, (ea, eb) => new { ea, eb })
                 .Select((r, i) => new { r.ea, r.eb, i })
-                .All(r => IsEqual(r.ea, r.eb, $"{path}[{r.i}]"));
+                .Select(r => IsEqual(r.ea, r.eb, $"{path}[{r.i}]"))
+                .FirstOrDefault(r => r != null);
         }
         else if (varType == Variant.Type.Object)
         {
@@ -56,17 +46,18 @@ public class EqualityHelper
             var propListA = objA.GetPropertyList();
             var propListB = objB.GetPropertyList();
 
-            var isPropMetaEqual = IsEqual(propListA, propListB, $"{path}:PropMeta");
+            var propMetaMismatch = IsEqual(propListA, propListB, $"{path}:PropMeta");
 
-            if (!isPropMetaEqual)
+            if (propMetaMismatch != null)
             {
-                LogFalse(logsEnabled, $"{path}: prop meta mismatch");
-                return false;
+                return $"{path}: prop meta mismatch";
             }
 
             var propNames = propListA.Select(p => (string)p["name"]);
 
-            return propNames.All(pn => IsEqual(objA.Get(pn), objB.Get(pn), $"{path}.{pn}"));
+            return propNames
+                .Select(pn => IsEqual(objA.Get(pn), objB.Get(pn), $"{path}.{pn}"))
+                .FirstOrDefault(r => r != null);
         }
         else if (varType == Variant.Type.Dictionary)
         {
@@ -75,26 +66,25 @@ public class EqualityHelper
 
             if (dictA.Count != dictB.Count)
             {
-                LogFalse(logsEnabled, $"{path}: Dictionary count mismatch: ${dictA.Count} != ${dictB.Count}");
-                return false;
+                return $"{path}: Dictionary count mismatch: ${dictA.Count} != ${dictB.Count}";
             }
 
-            var abKeys = dictA.Keys.Select(ak => new { ak, bk = dictB.Keys.SingleOrDefault(bk => IsEqual(ak, bk, null)) });
+            var abKeys = dictA.Keys.Select(ak => new { ak, bk = dictB.Keys.SingleOrDefault(bk => IsEqual(ak, bk, $"{path}:contains({ak})") == null) });
 
-            var missingKey = abKeys.FirstOrDefault(abk => abk.bk.Obj == null);
+            var isMissingKey = abKeys.Any(abk => abk.bk.Obj == null);
 
-            if (missingKey != null)
+            if (isMissingKey)
             {
-                LogFalse(logsEnabled, $"{path}: Dictionary keys mismatch for key {missingKey.ak}");
-                return false;
+                return $"{path}: Dictionary keys mismatch";
             }
 
-            return abKeys.All(k => IsEqual(dictA[k.ak], dictB[k.bk], $"{path}[{k.ak}]"));
+            return abKeys
+                .Select(k => IsEqual(dictA[k.ak], dictB[k.bk], $"{path}[{k.ak}]"))
+                .FirstOrDefault(r => r != null);
         }
         else
         {
-            LogFalse(logsEnabled, $"{path}: {a} != {b}");
-            return false;
+            return $"{path}: {a} != {b}";
         }
     }
 

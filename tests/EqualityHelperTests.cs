@@ -1,5 +1,4 @@
 using GdUnit4;
-using Godot;
 using Godot.Collections;
 using static GdUnit4.Assertions;
 
@@ -8,7 +7,7 @@ public class EqualityHelperTests
 {
     [TestCase]
     [RequireGodotRuntime]
-    public void TwoSimpleEqualObjects_True()
+    public void TwoSimpleEqualObjects_Null()
     {
         // Arrange
         var equalityHelper = new EqualityHelper();
@@ -20,7 +19,7 @@ public class EqualityHelperTests
         var result = equalityHelper.IsEqual(redCar, anotherRedCar);
 
         // Assert
-        AssertBool(result).IsTrue();
+        AssertString(result).IsNull();
     }
 
     [TestCase]
@@ -37,7 +36,7 @@ public class EqualityHelperTests
         var result = equalityHelper.IsEqual(redCar, blueCar);
 
         // Assert
-        AssertBool(result).IsFalse();
+        AssertString(result).IsEqual(".Colour: Red != Blue");
     }
 
     [TestCase]
@@ -54,7 +53,7 @@ public class EqualityHelperTests
         var result = equalityHelper.IsEqual(redCar, hundredTrain);
 
         // Assert
-        AssertBool(result).IsFalse();
+        AssertString(result).IsEqual(": prop meta mismatch");
     }
 
     [TestCase]
@@ -74,7 +73,7 @@ public class EqualityHelperTests
         var result = equalityHelper.IsEqual(array, sameArray);
 
         // Assert
-        AssertBool(result).IsTrue();
+        AssertString(result).IsNull();
     }
 
     [TestCase]
@@ -94,7 +93,7 @@ public class EqualityHelperTests
         var result = equalityHelper.IsEqual(array, differentArray);
 
         // Assert
-        AssertBool(result).IsFalse();
+        AssertString(result).IsEqual("[0]: 1 != 7");
     }
 
     [TestCase]
@@ -124,7 +123,7 @@ public class EqualityHelperTests
         var result = equalityHelper.IsEqual(dictionary, sameDictionary);
 
         // Assert
-        AssertBool(result).IsTrue();
+        AssertString(result).IsNull();
     }
 
     [TestCase]
@@ -154,7 +153,7 @@ public class EqualityHelperTests
         var result = equalityHelper.IsEqual(dictionary, differentDictionary);
 
         // Assert
-        AssertBool(result).IsFalse();
+        AssertString(result).IsEqual("[1]: 1 != 7");
     }
 
     [TestCase]
@@ -184,7 +183,7 @@ public class EqualityHelperTests
         var result = equalityHelper.IsEqual(dictionary, differentKeyDictionary);
 
         // Assert
-        AssertBool(result).IsFalse();
+        AssertString(result).IsEqual(": Dictionary keys mismatch");
     }
     
 }
