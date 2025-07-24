@@ -1,8 +1,6 @@
 
 using System.Collections.Generic;
 using GdUnit4;
-using Godot;
-using Godot.Collections;
 
 [TestSuite]
 public class ObjectCopierTests
@@ -118,7 +116,7 @@ public class ObjectCopierTests
         equalityHelper.AssertEquals(expected, result);
     }
 
-        [TestCase]
+    [TestCase]
     [RequireGodotRuntime]
     public void CopyWithExcludeAndInclude_AlteredButExcludedSameAsOriginalAndIncludedSameAsAltered()
     {
