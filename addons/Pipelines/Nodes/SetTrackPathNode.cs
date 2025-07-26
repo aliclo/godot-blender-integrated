@@ -25,7 +25,7 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
     private Button _outputNodePicker;
 
     private AnimationPlayer _animationPlayer;
-    private ICloneablePipeValue _cloneablePipeValue;
+    private CloneablePipeValue _cloneablePipeValue;
     private string _nodeName;
     private NodePath _targetNodePath;
     private List<NodePath> _nodeDependencies = new List<NodePath>();
@@ -129,33 +129,6 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
 
         _animationPlayer = (AnimationPlayer)obj;
 
-        if (_targetNodePath != null && !_targetNodePath.IsEmpty)
-        {
-            var targetNode = _context.RootNode.GetNodeOrNull(_targetNodePath);
-
-            if (targetNode != null)
-            {
-                foreach (var animationLibraryName in _animationPlayer.GetAnimationLibraryList())
-                {
-                    var animationLibrary = _animationPlayer.GetAnimationLibrary(animationLibraryName);
-
-                    foreach (var animationName in animationLibrary.GetAnimationList())
-                    {
-                        var animation = animationLibrary.GetAnimation(animationName);
-
-                        for (int ti = 0; ti < animation.GetTrackCount(); ti++)
-                        {
-                            animation.TrackSetPath(ti, targetNode.GetPath());
-                        }
-                    }
-                }
-            }
-            else
-            {
-                GD.PrintErr("Target node doesn't exist for ", nameof(SetTrackPathNode), " '", _targetNodePath, "'");
-            }
-        }
-
         var resultPipeValue = new PipeValue()
         {
             Value = _animationPlayer,
@@ -164,6 +137,37 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
         };
 
         _cloneablePipeValue = new CloneablePipeValue() { PipeValue = resultPipeValue };
+
+        if (_targetNodePath != null && !_targetNodePath.IsEmpty)
+        {
+            var targetNode = _context.RootNode.GetNodeOrNull(_targetNodePath);
+
+            if (targetNode != null)
+            {
+                _cloneablePipeValue.OnClone += (clonedPipeValue) => clonedPipeValue.Value.TreeEntered += () =>
+                {
+                    string targetNodeRelativePath = clonedPipeValue.Value.GetNode(_animationPlayer.RootNode).GetPathTo(targetNode);
+                    foreach (var animationLibraryName in _animationPlayer.GetAnimationLibraryList())
+                    {
+                        var animationLibrary = _animationPlayer.GetAnimationLibrary(animationLibraryName);
+
+                        foreach (var animationName in animationLibrary.GetAnimationList())
+                        {
+                            var animation = animationLibrary.GetAnimation(animationName);
+
+                            for (int ti = 0; ti < animation.GetTrackCount(); ti++)
+                            {
+                                animation.TrackSetPath(ti, clonedPipeValue.Value.GetNode(_animationPlayer.RootNode).GetPathTo(targetNode));
+                            }
+                        }
+                    }
+                };
+            }
+            else
+            {
+                GD.PrintErr("Target node doesn't exist for ", nameof(SetTrackPathNode), " '", _targetNodePath, "'");
+            }
+        }
 
         return _cloneablePipeValue;
     }

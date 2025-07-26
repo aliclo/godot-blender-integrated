@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="BlenderImporterPlus"
-run/main_scene="uid://tufg27ewo58a"
+run/main_scene="uid://cdu4ca0yav4lq"
 config/features=PackedStringArray("4.4", "C#", "Forward Plus")
 config/icon="res://icon.svg"
 
