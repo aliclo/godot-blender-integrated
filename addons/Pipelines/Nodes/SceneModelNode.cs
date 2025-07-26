@@ -53,12 +53,7 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
 
     private static readonly List<string[]> COLLISION_SHAPE_UNTOUCHED_PROPERTIES = new List<string[]>() {};
 
-    private static readonly List<string[]> ANIMATION_PLAYER_TOUCHED_PROPERTIES = new List<string[]>() {
-        new string[] { "assigned_animation" },
-        new string[] { "libraries" }
-    };
-
-    private static readonly List<string[]> ANIMATION_PLAYER_UNTOUCHED_PROPERTIES = new List<string[]>() {};
+    private static readonly List<string[]> ANIMATION_PLAYER_TOUCHED_PROPERTIES = new List<string[]>() {};
 
     private PipeContext _context;
     private EditorResourcePicker _sceneModelPicker;
@@ -224,7 +219,8 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
             }
 
             var destinationHelper = new DestinationHelper();
-            var pipeValue = blendNodes?.AnimationPlayer == null ? null : new PipeValue() { Value = blendNodes.AnimationPlayer, TouchedProperties = ANIMATION_PLAYER_TOUCHED_PROPERTIES, UntouchedProperties = ANIMATION_PLAYER_UNTOUCHED_PROPERTIES };
+            var animationPlayerUntouchedProperties = GetUntouchedProps(blendNodes.AnimationPlayer);
+            var pipeValue = blendNodes?.AnimationPlayer == null ? null : new PipeValue() { Value = blendNodes.AnimationPlayer, TouchedProperties = ANIMATION_PLAYER_TOUCHED_PROPERTIES, UntouchedProperties = animationPlayerUntouchedProperties };
             destinationHelper.AddReceivePipes(_context, ANIMATION_PLAYER_NAME, receivePipes, blendNodes?.AnimationPlayer == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
         }
     }
@@ -328,7 +324,8 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         foreach (var animationPlayerPipe in _animationPlayerPipes)
         {
             animationPlayerPipe.PreRegister(ANIMATION_PLAYER_NAME);
-            var pipeValue = new PipeValue() { Value = animationPlayer, TouchedProperties = ANIMATION_PLAYER_TOUCHED_PROPERTIES, UntouchedProperties = ANIMATION_PLAYER_UNTOUCHED_PROPERTIES };
+            var animationPlayerUntouchedProperties = GetUntouchedProps(animationPlayer);
+            var pipeValue = new PipeValue() { Value = animationPlayer, TouchedProperties = ANIMATION_PLAYER_TOUCHED_PROPERTIES, UntouchedProperties = animationPlayerUntouchedProperties };
             _context.RegisterPipe(new ValuePipe() { Pipe = animationPlayerPipe, CloneablePipeValue = new CloneablePipeValue() { PipeValue = pipeValue } });
         }
     }
@@ -420,6 +417,24 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
             CollisionShape = collisionShape,
             AnimationPlayer = animationPlayer
         };
+    }
+
+    private List<string[]> GetUntouchedProps(AnimationPlayer animationPlayer)
+    {
+        var untouchedProps = new List<string[]>();
+
+        var animationLibraryNames = animationPlayer.GetAnimationLibraryList();
+        foreach (var animationLibraryName in animationLibraryNames)
+        {
+            var animationLibrary = animationPlayer.GetAnimationLibrary(animationLibraryName);
+            var animationNames = animationLibrary.GetAnimationList();
+            foreach (var animationName in animationNames)
+            {
+                untouchedProps.Add(["libraries", animationLibraryName, "_data", animationName, "loop_mode"]);
+            }
+        }
+
+        return untouchedProps;
     }
 
     private void SceneChanged(Resource scene)

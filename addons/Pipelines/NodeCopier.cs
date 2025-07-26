@@ -34,7 +34,11 @@ public class NodeCopier
         "Visibility Range",
         "MeshInstance3D",
         "Skeleton",
-        "MyScript"
+        "MyScript",
+        "current_animation_length",
+        "current_animation_position",
+        "assigned_animation",
+        "resource_path"
     };
 
     public Node CopyValues(Node original, Node altered, List<string[]> excludePropPaths, List<string[]> includePropPaths)
@@ -59,7 +63,7 @@ public class NodeCopier
     {
         if (original.VariantType != altered.VariantType || altered.VariantType != result.VariantType)
         {
-            throw new System.Exception("Types don't match");
+            throw new Exception("Types don't match");
         }
 
         var variantType = original.VariantType;
@@ -150,7 +154,7 @@ public class NodeCopier
             var objProps = resultObj
                 .GetPropertyList()
                 .Select(p => (string)p["name"])
-                .Where(pn => !PropNamesToIgnore.Contains(pn));;
+                .Where(pn => !PropNamesToIgnore.Contains(pn));
 
             IEnumerable<string> keysOfPropsToCopyFromOrig;
             IEnumerable<string> keysOfPropsToCopyFromNew;
