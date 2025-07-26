@@ -417,6 +417,9 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         }
 
         untouchedProps.Add(["autoplay"]);
+        untouchedProps.Add(["callback_mode_process"]);
+        untouchedProps.Add(["callback_mode_method"]);
+        untouchedProps.Add(["callback_mode_discrete"]);
 
         return untouchedProps;
     }
