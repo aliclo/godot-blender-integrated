@@ -27,7 +27,7 @@ public partial class CloneablePipeValue : GodotObject, ICloneablePipeValue {
             UntouchedProperties = _pipeValue.UntouchedProperties.Select(up => up.ToArray()).ToList(),
         };
 
-        EmitSignal(SignalName.OnClone, duplicateValue);
+        EmitSignal(SignalName.OnClone, dupPipeValue);
 
         return dupPipeValue;
     } 
