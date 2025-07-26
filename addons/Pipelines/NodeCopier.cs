@@ -55,6 +55,22 @@ public class NodeCopier
         return result;
     }
 
+    public Node CopyValues(Node original, ICloneablePipeValue altered)
+    {
+        var pipeValue = altered.ClonePipeValue();
+        var alteredValue = pipeValue.Value;
+        var result = altered.ClonePipeValue().Value;
+        
+        if (original.GetType() != result.GetType())
+        {
+            return result;
+        }
+
+        CopyValues(original, alteredValue, result, pipeValue.UntouchedProperties, pipeValue.TouchedProperties, 0);
+
+        return result;
+    }
+
     // Traverse the excluded properties, and search by included properties
     // Since you can get finer excluded properties, keep track of which were processed
     // Remove these if they were used and traverse the rest

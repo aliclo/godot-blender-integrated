@@ -123,9 +123,9 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         _nodeName = nodeName;
     }
 
-    public PipeValue Pipe(PipeValue pipeValue)
+    public ICloneablePipeValue Pipe(ICloneablePipeValue pipeValue)
     {
-        var obj = pipeValue.Value;
+        var obj = pipeValue.ClonePipeValue().Value;
         if (obj is not Node node)
         {
             return null;
@@ -133,7 +133,7 @@ public partial class OutputNode : PipelineNode, IReceivePipe
 
         if (_previousNode != null)
         {
-            node = _nodeCopier.CopyValues(_previousNode, node, pipeValue.UntouchedProperties, pipeValue.TouchedProperties);
+            node = _nodeCopier.CopyValues(_previousNode, pipeValue);
 
             var outputNodes = _context.OutputNodes;
             var outputNodePaths = outputNodes.Select(on => on.AbsoluteDestinationIncludingNode);

@@ -1,19 +1,35 @@
-using System.Collections.Generic;
 using System.Linq;
+using Godot;
 
-public class CloneablePipeValue : ICloneablePipeValue {
+public partial class CloneablePipeValue : GodotObject, ICloneablePipeValue {
     
     
-    public PipeValue PipeValue { get; set; }
+    [Signal]
+    public delegate void OnCloneEventHandler(PipeValue value);
+
+    private PipeValue _pipeValue;
+    public PipeValue PipeValue
+    {
+        set
+        {
+            _pipeValue = value;
+        }
+    }
 
     public PipeValue ClonePipeValue()
     {
-        return new PipeValue()
+        var duplicateValue = _pipeValue?.Value?.Duplicate();
+
+        var dupPipeValue = new PipeValue()
         {
-            Value = PipeValue?.Value?.Duplicate(),
-            TouchedProperties = PipeValue.TouchedProperties.Select(tp => tp.ToArray()).ToList(),
-            UntouchedProperties = PipeValue.UntouchedProperties.Select(up => up.ToArray()).ToList()
+            Value = duplicateValue,
+            TouchedProperties = _pipeValue.TouchedProperties.Select(tp => tp.ToArray()).ToList(),
+            UntouchedProperties = _pipeValue.UntouchedProperties.Select(up => up.ToArray()).ToList(),
         };
+
+        EmitSignal(SignalName.OnClone, duplicateValue);
+
+        return dupPipeValue;
     } 
 
 }

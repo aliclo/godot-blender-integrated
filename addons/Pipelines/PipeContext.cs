@@ -11,7 +11,7 @@ public partial class PipeContext : Node
     private class NodePipes
     {
         public IReceivePipe CurrentNodePipe => Pipes[CurrentProgress];
-        public PipeValue CurrentValue { get; set; }
+        public ICloneablePipeValue CurrentValue { get; set; }
         public List<IReceivePipe> Pipes { get; set; }
         public int CurrentProgress { get; set; } = 0;
     }
@@ -159,6 +159,7 @@ public partial class PipeContext : Node
         var nodePipesOrdering = OrderEvaluation(nodePipes);
         EvaluateNodePipes(nodePipesOrdering);
 
+        // TODO: This gets annoying, we only need this when an import has changed
         EditorInterface.Singleton.SaveScene();
     }
 
@@ -193,7 +194,7 @@ public partial class PipeContext : Node
 
         return processedPipes.Select(p => new NodePipes()
         {
-            CurrentValue = cloneablePipeValue.ClonePipeValue(),
+            CurrentValue = cloneablePipeValue,
             Pipes = p,
             CurrentProgress = 0
         });
@@ -279,6 +280,7 @@ public partial class PipeContext : Node
 
         EvaluateNodePipes(nodePipesOrdering);
         
+        // TODO: This gets annoying, we only need this when an import has changed
         EditorInterface.Singleton.SaveScene();
     }
 

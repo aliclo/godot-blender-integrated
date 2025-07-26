@@ -110,6 +110,7 @@ public partial class Pipelines : EditorPlugin
 		foreach (var sceneFilePath in sceneFilePaths)
 		{
 			EditorInterface.Singleton.OpenSceneFromPath(sceneFilePath);
+			// TODO: This is pointless as it doesn't run yet at the time of context running
 			EditorInterface.Singleton.SaveScene();
 		}
 	}

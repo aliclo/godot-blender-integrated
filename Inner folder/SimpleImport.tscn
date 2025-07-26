@@ -1,6 +1,9 @@
-[gd_scene load_steps=5 format=4 uid="uid://dt3sdl5agl6f2"]
+[gd_scene load_steps=6 format=4 uid="uid://dt3sdl5agl6f2"]
 
 [ext_resource type="Script" uid="uid://b5jmldk0tlx5g" path="res://addons/Pipelines/PipeContext.cs" id="1_vsb3i"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_k7eh8"]
+albedo_color = Color(0, 0, 0, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jpljf"]
 resource_name = "Material.002"
@@ -53,5 +56,6 @@ transform = Transform3D(0.893309, 0, 0.449444, 0, 1, 0, -0.449444, 0, 0.893309, 
 transform = Transform3D(0.0877351, 0.937937, 0.335524, -0.237281, 0.346805, -0.907427, -0.967471, 0, 0.252981, -230.301, 319.018, 150.898)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+material_override = SubResource("StandardMaterial3D_k7eh8")
 mesh = SubResource("ArrayMesh_mn4bq")
 skeleton = NodePath("")

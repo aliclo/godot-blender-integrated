@@ -25,8 +25,7 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
     private Button _outputNodePicker;
 
     private AnimationPlayer _animationPlayer;
-    private List<string[]> _lastTouchedProperties;
-    private List<string[]> _lastUntouchedProperties;
+    private ICloneablePipeValue _cloneablePipeValue;
     private string _nodeName;
     private NodePath _targetNodePath;
     private List<NodePath> _nodeDependencies = new List<NodePath>();
@@ -118,8 +117,9 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
         }
     }
 
-    public PipeValue Pipe(PipeValue pipeValue)
+    public ICloneablePipeValue Pipe(ICloneablePipeValue cloneablePipeValue)
     {
+        var pipeValue = cloneablePipeValue.ClonePipeValue();
         var obj = pipeValue.Value;
 
         if (obj is not AnimationPlayer)
@@ -127,10 +127,7 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
             return null;
         }
 
-        var animationPlayer = (AnimationPlayer)obj;
-
-        var newAnimationPlayer = (AnimationPlayer) animationPlayer.Duplicate();
-        _animationPlayer = newAnimationPlayer;
+        _animationPlayer = (AnimationPlayer)obj;
 
         if (_targetNodePath != null && !_targetNodePath.IsEmpty)
         {
@@ -159,15 +156,16 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
             }
         }
 
-        _lastTouchedProperties = pipeValue.TouchedProperties.Union(TOUCHED_PROPERTIES).ToList();
-        _lastUntouchedProperties = pipeValue.UntouchedProperties.Union(UNTOUCHED_PROPERTIES).ToList();
-
-        return new PipeValue()
+        var resultPipeValue = new PipeValue()
         {
-            Value = _animationPlayer.Duplicate(),
-            TouchedProperties = _lastTouchedProperties,
-            UntouchedProperties = _lastUntouchedProperties
+            Value = _animationPlayer,
+            TouchedProperties = pipeValue.TouchedProperties.Union(TOUCHED_PROPERTIES).ToList(),
+            UntouchedProperties = pipeValue.UntouchedProperties.Union(UNTOUCHED_PROPERTIES).ToList()
         };
+
+        _cloneablePipeValue = new CloneablePipeValue() { PipeValue = resultPipeValue };
+
+        return _cloneablePipeValue;
     }
 
     public void Clean()
@@ -200,17 +198,7 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
                 _targetNodePath = _context.RootNode.GetPathTo(newlyChosenParentNode);
                 _outputNodePicker.Text = _targetNodePath;
 
-                var cloneableAnimationPlayer = new CloneablePipeValue()
-                {
-                    PipeValue = new PipeValue()
-                    {
-                        TouchedProperties = _lastTouchedProperties,
-                        UntouchedProperties = _lastUntouchedProperties,
-                        Value = _animationPlayer.Duplicate()
-                    }
-                };
-
-                var valuePipe = new ValuePipe() { Pipe = this, CloneablePipeValue = cloneableAnimationPlayer };
+                var valuePipe = new ValuePipe() { Pipe = this, CloneablePipeValue = _cloneablePipeValue };
                 _context.ReprocessPipe([valuePipe]);
             }
             else
@@ -234,8 +222,7 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
         NextPipes.AddRange(receivePipes);
 
         var destinationHelper = new DestinationHelper();
-        var pipeValue = new PipeValue() { Value = _animationPlayer.Duplicate(), TouchedProperties = _lastTouchedProperties, UntouchedProperties = _lastUntouchedProperties };
-        destinationHelper.AddReceivePipes(_context, _nodeName, receivePipes, _animationPlayer == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
+        destinationHelper.AddReceivePipes(_context, _nodeName, receivePipes, _cloneablePipeValue == null ? null : _cloneablePipeValue);
     }
 
     public override void Disconnect(int index, List<IReceivePipe> receivePipes)

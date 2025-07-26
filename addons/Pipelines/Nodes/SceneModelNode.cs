@@ -62,6 +62,9 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
     private List<IReceivePipe> _meshPipes = new List<IReceivePipe>();
     private List<IReceivePipe> _collisionShapePipes = new List<IReceivePipe>();
     private List<IReceivePipe> _animationPlayerPipes = new List<IReceivePipe>();
+    private ICloneablePipeValue _meshCloneablePipeValue;
+    private ICloneablePipeValue _collisionShapeCloneablePipeValue;
+    private ICloneablePipeValue _animationPlayerCloneablePipeValue;
 
     private List<List<IReceivePipe>> _nodeConnections;
     public override List<List<IReceivePipe>> NodeConnections => _nodeConnections;
@@ -144,21 +147,10 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
     {
         _meshPipes.AddRange(receivePipes);
 
-        if (_sceneModelPicker.EditedResource != null)
+        if (_sceneModelPicker.EditedResource != null && _meshCloneablePipeValue != null)
         {
-            BlendNodes blendNodes = null;
-            try
-            {
-                blendNodes = RetrieveBlendSceneNodes();
-            }
-            catch (InvalidOperationException e)
-            {
-                GD.PrintErr(e.Message);
-            }
-
             var destinationHelper = new DestinationHelper();
-            var pipeValue = blendNodes?.Mesh == null ? null : new PipeValue() { Value = blendNodes.Mesh, TouchedProperties = MESH_TOUCHED_PROPERTIES, UntouchedProperties = MESH_UNTOUCHED_PROPERTIES };
-            destinationHelper.AddReceivePipes(_context, MESH_INSTANCE_3D_NAME, receivePipes, blendNodes?.Mesh == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
+            destinationHelper.AddReceivePipes(_context, MESH_INSTANCE_3D_NAME, receivePipes, _meshCloneablePipeValue);
         }
     }
 
@@ -174,22 +166,10 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
     {
         _collisionShapePipes.AddRange(receivePipes);
 
-        if (_sceneModelPicker.EditedResource != null)
+        if (_sceneModelPicker.EditedResource != null && _collisionShapeCloneablePipeValue != null)
         {
-            BlendNodes blendNodes = null;
-
-            try
-            {
-                blendNodes = RetrieveBlendSceneNodes();
-            }
-            catch (InvalidOperationException e)
-            {
-                GD.PrintErr(e.Message);
-            }
-
             var destinationHelper = new DestinationHelper();
-            var pipeValue = blendNodes?.CollisionShape == null ? null : new PipeValue() { Value = blendNodes.CollisionShape, TouchedProperties = COLLISION_SHAPE_TOUCHED_PROPERTIES, UntouchedProperties = COLLISION_SHAPE_UNTOUCHED_PROPERTIES };
-            destinationHelper.AddReceivePipes(_context, COLLISION_SHAPE_3D_NAME, receivePipes, blendNodes?.CollisionShape == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
+            destinationHelper.AddReceivePipes(_context, COLLISION_SHAPE_3D_NAME, receivePipes, _collisionShapeCloneablePipeValue);
         }
     }
 
@@ -205,23 +185,10 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
     {
         _animationPlayerPipes.AddRange(receivePipes);
 
-        if (_sceneModelPicker.EditedResource != null)
+        if (_sceneModelPicker.EditedResource != null && _animationPlayerCloneablePipeValue != null)
         {
-            BlendNodes blendNodes = null;
-
-            try
-            {
-                blendNodes = RetrieveBlendSceneNodes();
-            }
-            catch (InvalidOperationException e)
-            {
-                GD.PrintErr(e.Message);
-            }
-
             var destinationHelper = new DestinationHelper();
-            var animationPlayerUntouchedProperties = GetUntouchedProps(blendNodes.AnimationPlayer);
-            var pipeValue = blendNodes?.AnimationPlayer == null ? null : new PipeValue() { Value = blendNodes.AnimationPlayer, TouchedProperties = ANIMATION_PLAYER_TOUCHED_PROPERTIES, UntouchedProperties = animationPlayerUntouchedProperties };
-            destinationHelper.AddReceivePipes(_context, ANIMATION_PLAYER_NAME, receivePipes, blendNodes?.AnimationPlayer == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
+            destinationHelper.AddReceivePipes(_context, ANIMATION_PLAYER_NAME, receivePipes, _animationPlayerCloneablePipeValue);
         }
     }
 
@@ -307,26 +274,41 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         var collisionShape = blendNodes.CollisionShape;
         var animationPlayer = blendNodes.AnimationPlayer;
 
-        foreach (var meshPipe in _meshPipes)
+        if (mesh != null)
         {
-            meshPipe.PreRegister(MESH_INSTANCE_3D_NAME);
-            var pipeValue = new PipeValue() { Value = mesh, TouchedProperties = MESH_TOUCHED_PROPERTIES, UntouchedProperties = MESH_UNTOUCHED_PROPERTIES };
-            _context.RegisterPipe(new ValuePipe() { Pipe = meshPipe, CloneablePipeValue = new CloneablePipeValue() { PipeValue = pipeValue } });
+            var meshPipeValue = new PipeValue() { Value = mesh, TouchedProperties = MESH_TOUCHED_PROPERTIES, UntouchedProperties = MESH_UNTOUCHED_PROPERTIES };
+            _meshCloneablePipeValue = new CloneablePipeValue() { PipeValue = meshPipeValue };
+
+            foreach (var meshPipe in _meshPipes)
+            {
+                meshPipe.PreRegister(MESH_INSTANCE_3D_NAME);
+                _context.RegisterPipe(new ValuePipe() { Pipe = meshPipe, CloneablePipeValue = _meshCloneablePipeValue });
+            }
         }
 
-        foreach (var collisionShapePipe in _collisionShapePipes)
+        if (collisionShape != null)
         {
-            collisionShapePipe.PreRegister(COLLISION_SHAPE_3D_NAME);
-            var pipeValue = new PipeValue() { Value = collisionShape, TouchedProperties = COLLISION_SHAPE_TOUCHED_PROPERTIES, UntouchedProperties = COLLISION_SHAPE_UNTOUCHED_PROPERTIES };
-            _context.RegisterPipe(new ValuePipe() { Pipe = collisionShapePipe, CloneablePipeValue = new CloneablePipeValue() { PipeValue = pipeValue } });
+            var collisionShapePipeValue = new PipeValue() { Value = collisionShape, TouchedProperties = COLLISION_SHAPE_TOUCHED_PROPERTIES, UntouchedProperties = COLLISION_SHAPE_UNTOUCHED_PROPERTIES };
+            _collisionShapeCloneablePipeValue = new CloneablePipeValue() { PipeValue = collisionShapePipeValue };
+
+            foreach (var collisionShapePipe in _collisionShapePipes)
+            {
+                collisionShapePipe.PreRegister(COLLISION_SHAPE_3D_NAME);
+                _context.RegisterPipe(new ValuePipe() { Pipe = collisionShapePipe, CloneablePipeValue = _collisionShapeCloneablePipeValue });
+            }
         }
 
-        foreach (var animationPlayerPipe in _animationPlayerPipes)
+        if (animationPlayer != null)
         {
-            animationPlayerPipe.PreRegister(ANIMATION_PLAYER_NAME);
             var animationPlayerUntouchedProperties = GetUntouchedProps(animationPlayer);
-            var pipeValue = new PipeValue() { Value = animationPlayer, TouchedProperties = ANIMATION_PLAYER_TOUCHED_PROPERTIES, UntouchedProperties = animationPlayerUntouchedProperties };
-            _context.RegisterPipe(new ValuePipe() { Pipe = animationPlayerPipe, CloneablePipeValue = new CloneablePipeValue() { PipeValue = pipeValue } });
+            var animationPlayerPipeValue = new PipeValue() { Value = animationPlayer, TouchedProperties = ANIMATION_PLAYER_TOUCHED_PROPERTIES, UntouchedProperties = animationPlayerUntouchedProperties };
+            _animationPlayerCloneablePipeValue = new CloneablePipeValue() { PipeValue = animationPlayerPipeValue };
+
+            foreach (var animationPlayerPipe in _animationPlayerPipes)
+            {
+                animationPlayerPipe.PreRegister(ANIMATION_PLAYER_NAME);
+                _context.RegisterPipe(new ValuePipe() { Pipe = animationPlayerPipe, CloneablePipeValue = _animationPlayerCloneablePipeValue });
+            }
         }
     }
 
