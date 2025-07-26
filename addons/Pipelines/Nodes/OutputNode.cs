@@ -19,36 +19,7 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         public Variant Value { get; set; }
     }
 
-    private static readonly List<string> PropNamesToIgnore = new List<string>() {
-        "Node",
-        "_import_path",
-        "name",
-        "unique_name_in_owner",
-        "scene_file_path",
-        "owner",
-        "multiplayer",
-        "Process",
-        "Node3D",
-        "Thread Group",
-        "Transform",
-        "global_transform",
-        "global_position",
-        "global_basis",
-        "global_rotation",
-        "global_rotation_degrees",
-        "Visibility",
-        "visibility_parent",
-        "VisualInstance3D",
-        "Sorting",
-        "GeometryInstance3D",
-        "Geometry",
-        "Global Illumination",
-        "Visibility Range",
-        "MeshInstance3D",
-        "Skeleton",
-        "MyScript"
-    };
-
+    private NodeCopier _nodeCopier = new NodeCopier();
     private OutputNodeStore _outputNodeStore;
     private PipeContext _context;
 
@@ -57,8 +28,7 @@ public partial class OutputNode : PipelineNode, IReceivePipe
     private NodePath _destination;
     private string _nodeName;
     private Node _node;
-    private List<Node> _previousNodeChildren;
-    private List<NodeProp> _previousNodeProps;
+    private Node _previousNode;
     private List<NodePath> _nodeDependencies = new List<NodePath>();
 
     public List<IReceivePipe> NextPipes => null;
@@ -140,9 +110,10 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         }
 
         _node = _context.RootNode.GetNodeOrNull(_destination + "/" + _nodeName);
+
         if (_node != null)
         {
-            GetPreviousNodeValues(_node);
+            _previousNode = _node.Duplicate();
         }
     }
 
@@ -154,23 +125,22 @@ public partial class OutputNode : PipelineNode, IReceivePipe
     public PipeValue Pipe(PipeValue pipeValue)
     {
         var obj = pipeValue.Value;
-        if(obj is not Node node) {
+        if (obj is not Node node)
+        {
             return null;
         }
 
         _node = node;
 
-        if (_previousNodeProps != null)
+        if (_previousNode != null)
         {
-            foreach (var prop in _previousNodeProps.Where(p => !pipeValue.TouchedProperties.Contains(p.Name)))
-            {
-                node.Set(prop.Name, prop.Value);
-            }
-        }
+            node = _nodeCopier.CopyValues(_previousNode, node, pipeValue.UntouchedProperties, pipeValue.TouchedProperties);
 
-        if (_previousNodeChildren != null)
-        {
-            foreach (var child in _previousNodeChildren)
+            var outputNodes = _context.OutputNodes;
+            var outputNodePaths = outputNodes.Select(on => on.AbsoluteDestinationIncludingNode);
+            var nodeChildren = _previousNode.GetChildren().Where(c => !outputNodePaths.Contains(_context.GetPathTo(c))).ToList();
+
+            foreach (var child in nodeChildren)
             {
                 child.GetParent().RemoveChild(child);
                 child.Owner = null;
@@ -178,13 +148,15 @@ public partial class OutputNode : PipelineNode, IReceivePipe
             }
         }
 
-        if (_destination == null || _destination.IsEmpty) {
+        if (_destination == null || _destination.IsEmpty)
+        {
             return null;
         }
 
         var parent = _context.RootNode.GetNodeOrNull(_destination);
 
-        if(parent == null) {
+        if (parent == null)
+        {
             return null;
         }
 
@@ -192,22 +164,9 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         parent.AddChild(node);
         node.Owner = owner;
 
-        GetPreviousNodeValues(node);
+        _previousNode = node.Duplicate();
 
         return null;
-    }
-
-    private void GetPreviousNodeValues(Node previousNode)
-    {
-        var properties = previousNode.GetPropertyList();
-        var names = properties.Select(p => (string)p["name"]).Where(n => !PropNamesToIgnore.Contains(n));
-        _previousNodeProps = names
-            .Select(n => new NodeProp() { Name = n, Value = previousNode.Get(n) })
-            .ToList();
-
-        var outputNodes = _context.OutputNodes;
-        var outputNodePaths = outputNodes.Select(on => on.AbsoluteDestinationIncludingNode);
-        _previousNodeChildren = previousNode.GetChildren().Where(c => !outputNodePaths.Contains(_context.GetPathTo(c))).ToList();
     }
 
     public void Clean()

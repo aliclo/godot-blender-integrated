@@ -45,9 +45,11 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
     private const string EDGEIFY_NAME = "Edges";
 
     // TODO: Use this from the context instead of having to provide it to the context
-    private static readonly List<string> TOUCHED_PROPERTIES = new List<string>() {
-        nameof(MeshInstance3D.Mesh).ToLower()
+    private static readonly List<string[]> TOUCHED_PROPERTIES = new List<string[]>() {
+        new string[] { nameof(MeshInstance3D.Mesh).ToLower() }
     };
+
+    private static readonly List<string[]> UNTOUCHED_PROPERTIES = new List<string[]>() {};
 
     private EdgifyNodeStore _edgifyNodeStore;
     private PipeContext _context;
@@ -388,7 +390,8 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
         return new PipeValue()
         {
             Value = _meshInstance3D.Duplicate(),
-            TouchedProperties = TOUCHED_PROPERTIES
+            TouchedProperties = TOUCHED_PROPERTIES,
+            UntouchedProperties = UNTOUCHED_PROPERTIES
         };
     }
 
@@ -467,7 +470,7 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
         NextPipes.AddRange(receivePipes);
 
         var destinationHelper = new DestinationHelper();
-        var pipeValue = new PipeValue() { Value = _meshInstance3D.Duplicate(), TouchedProperties = TOUCHED_PROPERTIES };
+        var pipeValue = new PipeValue() { Value = _meshInstance3D.Duplicate(), TouchedProperties = TOUCHED_PROPERTIES, UntouchedProperties = UNTOUCHED_PROPERTIES };
         destinationHelper.AddReceivePipes(_context, _nodeName, receivePipes, _meshInstance3D == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
     }
 

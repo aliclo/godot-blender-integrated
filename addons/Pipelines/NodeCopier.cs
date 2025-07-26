@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
@@ -5,6 +6,36 @@ using Godot.Collections;
 
 public class NodeCopier
 {
+
+    private static readonly List<string> PropNamesToIgnore = new List<string>() {
+        "Node",
+        "_import_path",
+        "name",
+        "unique_name_in_owner",
+        "scene_file_path",
+        "owner",
+        "multiplayer",
+        "Process",
+        "Node3D",
+        "Thread Group",
+        "Transform",
+        "global_transform",
+        "global_position",
+        "global_basis",
+        "global_rotation",
+        "global_rotation_degrees",
+        "Visibility",
+        "visibility_parent",
+        "VisualInstance3D",
+        "Sorting",
+        "GeometryInstance3D",
+        "Geometry",
+        "Global Illumination",
+        "Visibility Range",
+        "MeshInstance3D",
+        "Skeleton",
+        "MyScript"
+    };
 
     public Node CopyValues(Node original, Node altered, List<string[]> excludePropPaths, List<string[]> includePropPaths)
     {
@@ -68,7 +99,7 @@ public class NodeCopier
             var alteredDict = (Dictionary)altered;
             var resultDict = (Dictionary)result;
 
-            var propKeys = resultDict.Keys;
+            var propKeys = resultDict.Keys.Where(k => k.Obj is not string ks || !PropNamesToIgnore.Contains(ks));
             IEnumerable<Variant> keysOfPropsToCopyFromOrig;
             IEnumerable<Variant> keysOfPropsToCopyFromNew;
 
@@ -118,7 +149,8 @@ public class NodeCopier
 
             var objProps = resultObj
                 .GetPropertyList()
-                .Select(p => (string)p["name"]);
+                .Select(p => (string)p["name"])
+                .Where(pn => !PropNamesToIgnore.Contains(pn));;
 
             IEnumerable<string> keysOfPropsToCopyFromOrig;
             IEnumerable<string> keysOfPropsToCopyFromNew;

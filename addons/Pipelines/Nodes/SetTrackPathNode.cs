@@ -1,6 +1,5 @@
 #if TOOLS
 using Godot;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -17,9 +16,8 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
     }
 
     // TODO: Use this from the context instead of having to provide it to the context
-    private static readonly List<string> TOUCHED_PROPERTIES = new List<string>() {
-        
-    };
+    private static readonly List<string[]> TOUCHED_PROPERTIES = new List<string[]>() {};
+    private static readonly List<string[]> UNTOUCHED_PROPERTIES = new List<string[]>() {};
 
     private SetTrackPathNodeStore _setTrackPathNodeStore;
     private PipeContext _context;
@@ -162,7 +160,8 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
         return new PipeValue()
         {
             Value = _animationPlayer.Duplicate(),
-            TouchedProperties = pipeValue.TouchedProperties.Union(TOUCHED_PROPERTIES).ToList()
+            TouchedProperties = pipeValue.TouchedProperties.Union(TOUCHED_PROPERTIES).ToList(),
+            UntouchedProperties = pipeValue.UntouchedProperties.Union(UNTOUCHED_PROPERTIES).ToList()
         };
     }
 
@@ -201,6 +200,7 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
                     PipeValue = new PipeValue()
                     {
                         TouchedProperties = TOUCHED_PROPERTIES,
+                        UntouchedProperties = UNTOUCHED_PROPERTIES,
                         Value = _animationPlayer.Duplicate()
                     }
                 };
@@ -229,7 +229,7 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
         NextPipes.AddRange(receivePipes);
 
         var destinationHelper = new DestinationHelper();
-        var pipeValue = new PipeValue() { Value = _animationPlayer.Duplicate(), TouchedProperties = TOUCHED_PROPERTIES };
+        var pipeValue = new PipeValue() { Value = _animationPlayer.Duplicate(), TouchedProperties = TOUCHED_PROPERTIES, UntouchedProperties = UNTOUCHED_PROPERTIES };
         destinationHelper.AddReceivePipes(_context, _nodeName, receivePipes, _animationPlayer == null ? null : new CloneablePipeValue() { PipeValue = pipeValue });
     }
 

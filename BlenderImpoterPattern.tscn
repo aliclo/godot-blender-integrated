@@ -51,7 +51,6 @@ data = PackedVector3Array(0, -1.9509, -9.80785, 1.9509, 0, -9.80785, 5.96046e-07
 script = ExtResource("1_jmf0e")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -56.5478, 77.9386, -7.5613e-06)
 mesh = SubResource("ArrayMesh_33aes")
 skeleton = NodePath("")
 
