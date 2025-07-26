@@ -83,3 +83,4 @@ skeleton = NodePath("")
 libraries = {
 &"": SubResource("AnimationLibrary_ysdcj")
 }
+autoplay = "Cube-colAction"

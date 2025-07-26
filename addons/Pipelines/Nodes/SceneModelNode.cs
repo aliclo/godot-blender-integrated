@@ -434,6 +434,8 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
             }
         }
 
+        untouchedProps.Add(["autoplay"]);
+
         return untouchedProps;
     }
 

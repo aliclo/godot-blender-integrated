@@ -110,7 +110,7 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         }
 
         _node = _context.RootNode.GetNodeOrNull(_destination + "/" + _nodeName);
-
+        
         if (_node != null)
         {
             _previousNode = _node.Duplicate();
@@ -129,8 +129,6 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         {
             return null;
         }
-
-        _node = node;
 
         if (_previousNode != null)
         {
@@ -165,6 +163,8 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         node.Owner = owner;
 
         _previousNode = node.Duplicate();
+
+        _node = node;
 
         return null;
     }
