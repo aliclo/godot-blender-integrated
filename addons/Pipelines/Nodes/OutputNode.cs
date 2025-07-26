@@ -109,10 +109,11 @@ public partial class OutputNode : PipelineNode, IReceivePipe
             _nodeDependencies.Add(AbsoluteDestination);
         }
 
-        _node = _context.RootNode.GetNodeOrNull(_destination + "/" + _nodeName);
-        
-        if (_node != null)
+        var node = _context.RootNode.GetNodeOrNull(_destination + "/" + _nodeName);
+
+        if (node != null)
         {
+            _node = node;
             _previousNode = _node.Duplicate();
         }
     }
