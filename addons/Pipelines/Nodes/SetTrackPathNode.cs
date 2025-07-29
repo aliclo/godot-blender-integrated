@@ -25,8 +25,8 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
     private Button _outputNodePicker;
 
     private AnimationPlayer _animationPlayer;
+    private ICloneablePipeValue _inputCloneablePipeValue;
     private CloneablePipeValue _cloneablePipeValue;
-    private string _nodeName;
     private NodePath _targetNodePath;
     private List<NodePath> _nodeDependencies = new List<NodePath>();
 
@@ -100,25 +100,11 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
         {
             _nodeDependencies.Add(_targetNodePath);
         }
-
-        foreach (var pipe in NextPipes)
-        {
-            pipe.Register();
-        }
-    }
-
-    public void PreRegister(string nodeName)
-    {
-        _nodeName = nodeName;
-
-        foreach (var pipe in NextPipes)
-        {
-            pipe.PreRegister(_nodeName);
-        }
     }
 
     public ICloneablePipeValue Pipe(ICloneablePipeValue cloneablePipeValue)
     {
+        _inputCloneablePipeValue = cloneablePipeValue;
         var pipeValue = cloneablePipeValue.ClonePipeValue();
         var obj = pipeValue.Value;
 
@@ -175,10 +161,6 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
     public void Clean()
     {
         _animationPlayer = null;
-        foreach (var pipe in NextPipes)
-        {
-            pipe.Clean();
-        }
     }
 
     public void PipeDisconnect()
@@ -202,7 +184,7 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
                 _targetNodePath = _context.RootNode.GetPathTo(newlyChosenParentNode);
                 _outputNodePicker.Text = _targetNodePath;
 
-                var valuePipe = new ValuePipe() { Pipe = this, CloneablePipeValue = _cloneablePipeValue };
+                var valuePipe = new ValuePipe() { Pipe = this, CloneablePipeValue = _inputCloneablePipeValue };
                 _context.ReprocessPipe([valuePipe]);
             }
             else
@@ -226,7 +208,7 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
         NextPipes.AddRange(receivePipes);
 
         var destinationHelper = new DestinationHelper();
-        destinationHelper.AddReceivePipes(_context, _nodeName, receivePipes, _cloneablePipeValue == null ? null : _cloneablePipeValue);
+        destinationHelper.AddReceivePipes(_context, receivePipes, _cloneablePipeValue == null ? null : _cloneablePipeValue);
     }
 
     public override void Disconnect(int index, List<IReceivePipe> receivePipes)

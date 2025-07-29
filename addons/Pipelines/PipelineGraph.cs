@@ -18,6 +18,7 @@ public partial class PipelineGraph : GraphEdit
     private PackedScene _sceneModelNode;
     private PackedScene _edgifyModelNode;
     private PackedScene _setTrackPathNode;
+    private PackedScene _setPropNode;
     private PackedScene _outputNode;
     private Vector2 _lastMousePos = Vector2.Zero;
 
@@ -29,6 +30,7 @@ public partial class PipelineGraph : GraphEdit
         _sceneModelNode = GD.Load<PackedScene>("res://addons/Pipelines/Nodes/SceneModelNode.tscn");
         _edgifyModelNode = GD.Load<PackedScene>("res://addons/Pipelines/Nodes/EdgifyNode.tscn");
         _setTrackPathNode = GD.Load<PackedScene>("res://addons/Pipelines/Nodes/SetTrackPathNode.tscn");
+        _setPropNode = GD.Load<PackedScene>("res://addons/Pipelines/Nodes/SetPropertyNode.tscn");
         _outputNode = GD.Load<PackedScene>("res://addons/Pipelines/Nodes/OutputNode.tscn");
         ConnectionRequest += HandleConnectionRequest;
         DisconnectionRequest += HandleDisconnectionRequest;
@@ -156,6 +158,9 @@ public partial class PipelineGraph : GraphEdit
                 break;
             case (int)RightClickMenuItems.AddSetTrackPathNode:
                 packedSceneToCreate = _setTrackPathNode;
+                break;
+            case (int)RightClickMenuItems.AddSetPropNode:
+                packedSceneToCreate = _setPropNode;
                 break;
             case (int)RightClickMenuItems.AddOutputNode:
                 packedSceneToCreate = _outputNode;

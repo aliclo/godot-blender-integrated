@@ -40,6 +40,8 @@ public partial class PipeContext : Node
             return;
         }
 
+        Pipelines.Instance.RegisterContext(this);
+
         var sceneFilePath = GetTree().EditedSceneRoot.SceneFilePath;
         var pipelineContextStores = _pipelineAccess.Read(sceneFilePath);
         var pipelineContextStore = pipelineContextStores?.SingleOrDefault(pcs => pcs.Name == Name);
@@ -286,6 +288,7 @@ public partial class PipeContext : Node
 
     protected override void Dispose(bool disposing)
     {
+        Pipelines.Instance.UnregisterContext(this);
         var allPipes = _pipelineNodeDict.Values;
 
         foreach (var pipe in allPipes)

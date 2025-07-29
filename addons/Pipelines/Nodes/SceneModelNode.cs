@@ -150,7 +150,7 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         if (_sceneModelPicker.EditedResource != null && _meshCloneablePipeValue != null)
         {
             var destinationHelper = new DestinationHelper();
-            destinationHelper.AddReceivePipes(_context, MESH_INSTANCE_3D_NAME, receivePipes, _meshCloneablePipeValue);
+            destinationHelper.AddReceivePipes(_context, receivePipes, _meshCloneablePipeValue);
         }
     }
 
@@ -169,7 +169,7 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         if (_sceneModelPicker.EditedResource != null && _collisionShapeCloneablePipeValue != null)
         {
             var destinationHelper = new DestinationHelper();
-            destinationHelper.AddReceivePipes(_context, COLLISION_SHAPE_3D_NAME, receivePipes, _collisionShapeCloneablePipeValue);
+            destinationHelper.AddReceivePipes(_context, receivePipes, _collisionShapeCloneablePipeValue);
         }
     }
 
@@ -188,7 +188,7 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         if (_sceneModelPicker.EditedResource != null && _animationPlayerCloneablePipeValue != null)
         {
             var destinationHelper = new DestinationHelper();
-            destinationHelper.AddReceivePipes(_context, ANIMATION_PLAYER_NAME, receivePipes, _animationPlayerCloneablePipeValue);
+            destinationHelper.AddReceivePipes(_context, receivePipes, _animationPlayerCloneablePipeValue);
         }
     }
 
@@ -281,7 +281,6 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
 
             foreach (var meshPipe in _meshPipes)
             {
-                meshPipe.PreRegister(MESH_INSTANCE_3D_NAME);
                 _context.RegisterPipe(new ValuePipe() { Pipe = meshPipe, CloneablePipeValue = _meshCloneablePipeValue });
             }
         }
@@ -293,7 +292,6 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
 
             foreach (var collisionShapePipe in _collisionShapePipes)
             {
-                collisionShapePipe.PreRegister(COLLISION_SHAPE_3D_NAME);
                 _context.RegisterPipe(new ValuePipe() { Pipe = collisionShapePipe, CloneablePipeValue = _collisionShapeCloneablePipeValue });
             }
         }
@@ -306,7 +304,6 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
 
             foreach (var animationPlayerPipe in _animationPlayerPipes)
             {
-                animationPlayerPipe.PreRegister(ANIMATION_PLAYER_NAME);
                 _context.RegisterPipe(new ValuePipe() { Pipe = animationPlayerPipe, CloneablePipeValue = _animationPlayerCloneablePipeValue });
             }
         }

@@ -63,7 +63,6 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
     private NumericLineEdit _maxYLineEdit;
     private MeshInstance3D _meshInstance3D;
     private ICloneablePipeValue _cloneablePipeValue;
-    private string _nodeName;
 
     private double _thicknessX = 0.5f;
     private double _thicknessY = 0.5f;
@@ -160,20 +159,7 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
 
     public void Register()
     {
-        foreach (var pipe in NextPipes)
-        {
-            pipe.Register();
-        }
-    }
-
-    public void PreRegister(string nodeName)
-    {
-        _nodeName = $"{nodeName}-{EDGEIFY_NAME}";
-
-        foreach (var pipe in NextPipes)
-        {
-            pipe.PreRegister(_nodeName);
-        }
+        
     }
 
     public ICloneablePipeValue Pipe(ICloneablePipeValue pipeValue)
@@ -384,7 +370,6 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
         arrMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.TriangleStrip, arrays);
         var edgeMeshInstance = new MeshInstance3D();
         edgeMeshInstance.Mesh = arrMesh;
-        edgeMeshInstance.Name = _nodeName;
 
         _meshInstance3D = edgeMeshInstance;
 
@@ -403,10 +388,6 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
     public void Clean()
     {
         _meshInstance3D = null;
-        foreach (var pipe in NextPipes)
-        {
-            pipe.Clean();
-        }
     }
 
     public void PipeDisconnect()
@@ -475,7 +456,7 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
         NextPipes.AddRange(receivePipes);
 
         var destinationHelper = new DestinationHelper();
-        destinationHelper.AddReceivePipes(_context, _nodeName, receivePipes, _cloneablePipeValue == null ? null : _cloneablePipeValue);
+        destinationHelper.AddReceivePipes(_context, receivePipes, _cloneablePipeValue == null ? null : _cloneablePipeValue);
     }
 
     public override void Disconnect(int index, List<IReceivePipe> receivePipes)

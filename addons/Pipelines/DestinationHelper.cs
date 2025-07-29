@@ -4,13 +4,8 @@ using System.Linq;
 public class DestinationHelper
 {
 
-    public void AddReceivePipes(PipeContext pipeContext, string destinationNodeName, IList<IReceivePipe> receiversToAdd, ICloneablePipeValue cloneableValue)
+    public void AddReceivePipes(PipeContext pipeContext, IList<IReceivePipe> receiversToAdd, ICloneablePipeValue cloneableValue)
     {
-        foreach (var receiver in receiversToAdd)
-        {
-            receiver.PreRegister(destinationNodeName);
-        }
-
         if (cloneableValue != null)
         {
             var valuePipes = receiversToAdd.Select(p => new ValuePipe() { Pipe = p, CloneablePipeValue = cloneableValue }).ToList();

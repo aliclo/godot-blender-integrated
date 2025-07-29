@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://c8mb4lxcnmqaf"]
+
+[ext_resource type="Script" uid="uid://csfiw6oedt4gc" path="res://addons/Pipelines/Nodes/SetPropertyNode.cs" id="1_64sa7"]
+
+[node name="SetPropertyNode" type="GraphNode"]
+offset_right = 200.0
+offset_bottom = 115.0
+mouse_filter = 1
+title = "Set Prop"
+script = ExtResource("1_64sa7")

@@ -10,11 +10,14 @@ public partial class Pipelines : EditorPlugin
 
 	private const string ADDON_PATH = "res://addons/Pipelines";
 
+	public static Pipelines Instance;
+
 	private PipelineEditor _pipelineEditor;
-	private PipeContext _context;
+	private PipeContext _activeContext;
 	private EditorSelection _selection;
 	private PipelineAccess _pipelineAccess = new PipelineAccess();
 	private ImportEventer _importEventer;
+	private List<PipeContext> _pipeContexts = new List<PipeContext>();
 
 	public override void _EnterTree()
 	{
@@ -29,12 +32,14 @@ public partial class Pipelines : EditorPlugin
 		_selection = EditorInterface.Singleton.GetSelection();
 		_selection.SelectionChanged += OnSelectionChanged;
 		SceneSaved += OnSave;
+		Instance = this;
 	}
 
 	public override void _ExitTree()
 	{
 		// Clean-up of the plugin goes here.
 		// TODO: Clear save history at this point
+		Instance = null;
 		_importEventer.SceneImportUpdated -= SavePipelineScenes;
 		RemoveScenePostImportPlugin(_importEventer);
 		RemoveCustomType(nameof(PipeContext));
@@ -46,28 +51,39 @@ public partial class Pipelines : EditorPlugin
 		}
 	}
 
-	public void OnSave(string filePath)
+	public void RegisterContext(PipeContext context)
 	{
-		if (_context != null && filePath == _context.Owner.SceneFilePath)
+		_pipeContexts.Add(context);
+	}
+
+	public void UnregisterContext(PipeContext context)
+	{
+		_pipeContexts.Remove(context);
+	}
+
+	private void OnSave(string filePath)
+	{
+		var filePipeContexts = _pipeContexts.Where(c => c.Owner.SceneFilePath == filePath);
+		foreach (var context in filePipeContexts)
 		{
-			_pipelineAccess.Write(_context.Owner.SceneFilePath, _context);
+			_pipelineAccess.Write(context.Owner.SceneFilePath, context);
 		}
 	}
 
-	public void OnSelectionChanged()
+	private void OnSelectionChanged()
 	{
-		if (_pipelineEditor != null)
-		{
-			ClearContextAndPipelineGraph();
-		}
-
 		var selectedNodes = _selection.GetSelectedNodes();
 		var pipelineContext = (PipeContext)selectedNodes.FirstOrDefault(n => n is PipeContext);
 
 		if (pipelineContext != null)
 		{
-			_context = pipelineContext;
-			_context.TreeExiting += ClearContextAndPipelineGraph;
+			if (_pipelineEditor != null)
+			{
+				ClearContextAndPipelineGraph();
+			}
+
+			_activeContext = pipelineContext;
+			_activeContext.TreeExiting += ClearContextAndPipelineGraph;
 			_pipelineEditor = GD.Load<PackedScene>($"{ADDON_PATH}/PipelineEditor.tscn").Instantiate<PipelineEditor>();
 
 			_pipelineEditor.Ready += InitPipelineEditor;
@@ -78,19 +94,19 @@ public partial class Pipelines : EditorPlugin
 	private void InitPipelineEditor()
 	{
 		_pipelineEditor.PipelineGraph.UndoRedo = GetUndoRedo();
-		_pipelineEditor.PipelineGraph.OnLoadContext(_context);
+		_pipelineEditor.PipelineGraph.OnLoadContext(_activeContext);
 		_pipelineEditor.Ready -= InitPipelineEditor;
 	}
 
 	private void ClearContextAndPipelineGraph()
 	{
-		_context.TreeExiting -= ClearContextAndPipelineGraph;
-		_pipelineAccess.Write(_context.Owner.SceneFilePath, _context);
+		_activeContext.TreeExiting -= ClearContextAndPipelineGraph;
+		_pipelineAccess.Write(_activeContext.Owner.SceneFilePath, _activeContext);
 		_pipelineEditor.PipelineGraph.Cleanup();
 		RemoveControlFromBottomPanel(_pipelineEditor);
 		_pipelineEditor.QueueFree();
 		_pipelineEditor = null;
-		_context = null;
+		_activeContext = null;
 	}
 
 	private void SavePipelineScenes(string fileName)

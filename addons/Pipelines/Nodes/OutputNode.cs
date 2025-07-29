@@ -11,12 +11,8 @@ public partial class OutputNode : PipelineNode, IReceivePipe
     {
         [Export]
         public string Destination { get; set; }
-    }
-
-    private class NodeProp
-    {
-        public string Name { get; set; }
-        public Variant Value { get; set; }
+        [Export]
+        public string NodeName { get; set; }
     }
 
     private NodeCopier _nodeCopier = new NodeCopier();
@@ -24,6 +20,7 @@ public partial class OutputNode : PipelineNode, IReceivePipe
     private PipeContext _context;
 
     private Button _outputNodePicker;
+    private LineEdit _nodeNameEditor;
 
     private NodePath _destination;
     private string _nodeName;
@@ -65,7 +62,8 @@ public partial class OutputNode : PipelineNode, IReceivePipe
     {
         return GodotJsonParser.ToJsonType(new OutputNodeStore()
         {
-            Destination = _destination
+            Destination = _destination,
+            NodeName = _nodeName
         });
     }
 
@@ -89,10 +87,16 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         _outputNodePicker.Pressed += OutputNodePickerPressed;
         AddChild(_outputNodePicker);
 
+        _nodeNameEditor = new LineEdit();
+        _nodeNameEditor.TextChanged += NodeNameChanged;
+        AddChild(_nodeNameEditor);
+
         if (_outputNodeStore != null)
         {
             _outputNodePicker.Text = _outputNodeStore.Destination;
             _destination = _outputNodeStore.Destination;
+            _nodeNameEditor.Text = _outputNodeStore.NodeName;
+            _nodeName = _outputNodeStore.NodeName;
         }
         else
         {
@@ -114,13 +118,9 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         if (node != null)
         {
             _node = node;
+            _node.Renamed += OutputNodeRenamed;
             _previousNode = _node.Duplicate();
         }
-    }
-
-    public void PreRegister(string nodeName)
-    {
-        _nodeName = nodeName;
     }
 
     public ICloneablePipeValue Pipe(ICloneablePipeValue pipeValue)
@@ -159,6 +159,7 @@ public partial class OutputNode : PipelineNode, IReceivePipe
             return null;
         }
 
+        node.Name = _nodeName;
         var owner = _context.RootNode?.Owner ?? _context.RootNode;
         parent.AddChild(node);
         node.Owner = owner;
@@ -166,6 +167,7 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         _previousNode = node.Duplicate();
 
         _node = node;
+        _node.Renamed += OutputNodeRenamed;
 
         return null;
     }
@@ -174,6 +176,7 @@ public partial class OutputNode : PipelineNode, IReceivePipe
     {
         if (_node != null)
         {
+            _node.Renamed -= OutputNodeRenamed;
             var nodeParent = _node.GetParent();
             if (nodeParent != null)
             {
@@ -193,6 +196,36 @@ public partial class OutputNode : PipelineNode, IReceivePipe
     {
         EditorInterface.Singleton.PopupNodeSelector(Callable.From<NodePath>(OutputNodePathChanged));
     }
+    
+    private void OutputNodeRenamed()
+    {
+        NodeNameChanged(_node.Name);
+    }
+
+    private void NodeNameChanged(string nodeName)
+    {
+        if (_nodeNameEditor.Text != nodeName)
+        {
+            _nodeNameEditor.Text = nodeName;
+        }
+        
+        if (string.IsNullOrWhiteSpace(nodeName))
+        {
+            _nodeName = "Unnamed-Node";
+        }
+        else
+        {
+            _nodeName = nodeName;
+        }
+
+        if (_node != null)
+        {
+            if (_node.Name != _nodeName)
+            {
+                _node.Name = _nodeName;
+            }
+        }
+    }
 
     private void OutputNodePathChanged(NodePath destinationPath)
     {
@@ -208,7 +241,7 @@ public partial class OutputNode : PipelineNode, IReceivePipe
                 _context.Reprocess();
             }
         }
-        
+
         EditorInterface.Singleton.MarkSceneAsUnsaved();
     }
 
