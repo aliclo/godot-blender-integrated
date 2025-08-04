@@ -1,3 +1,4 @@
+#if TOOLS
 using Godot;
 using Godot.Collections;
 using System.Collections.Generic;
@@ -268,3 +269,4 @@ public partial class PipelineGraph : GraphEdit
     }
 
 }
+#endif

@@ -1,3 +1,4 @@
+#if TOOLS
 using System.Collections.Generic;
 
 public interface IReceivePipe : IPipe {
@@ -9,3 +10,4 @@ public interface IReceivePipe : IPipe {
     public void PipeDisconnect();
 
 }
+#endif

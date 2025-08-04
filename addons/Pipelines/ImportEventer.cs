@@ -1,3 +1,4 @@
+#if TOOLS
 using Godot;
 
 public partial class ImportEventer : EditorScenePostImportPlugin
@@ -37,5 +38,6 @@ public partial class ImportEventer : EditorScenePostImportPlugin
     {
         EmitSignal(SignalName.SceneImportUpdated, filePath);
     }
-    
+
 }
+#endif

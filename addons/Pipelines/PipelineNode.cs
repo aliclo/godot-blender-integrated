@@ -1,3 +1,4 @@
+#if TOOLS
 using System.Collections.Generic;
 using Godot;
 
@@ -21,3 +22,4 @@ public abstract partial class PipelineNode : GraphNode, IPipe, IStorable
     public abstract void DisposePipe();
 
 }
+#endif

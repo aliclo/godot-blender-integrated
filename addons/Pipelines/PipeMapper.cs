@@ -1,8 +1,9 @@
+#if TOOLS
 using Godot.Collections;
 
 public class PipeMapper
 {
-    
+
     public PipelineNodeStore Map(PipelineNode pipelineNode)
     {
         return new PipelineNodeStore()
@@ -27,3 +28,4 @@ public class PipeMapper
     }
 
 }
+#endif

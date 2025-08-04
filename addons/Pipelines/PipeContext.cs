@@ -70,6 +70,11 @@ public partial class PipeContext : Node
 
     public override void _EnterTree()
     {
+        if (OS.HasFeature("editor_runtime"))
+        {
+            return;
+        }
+
         if (Owner == null)
         {
             _completedFirstImport = true;
@@ -209,7 +214,7 @@ public partial class PipeContext : Node
         var nodesToBeProcessed = nodePipesList
             .SelectMany(np => np.Pipes)
             .Distinct();
-        
+
         var processedPipes = new List<IReceivePipe>();
 
         while (evaluateNodePipes.Any())
@@ -271,7 +276,7 @@ public partial class PipeContext : Node
                 pipe.Register();
             }
         }
-        
+
         _nodeDependencies = _pipelineNodeDict.Values
             .SelectMany(pn => pn.NodeDependencies.Select(nd => new { Node = pn, NodeDependencyPath = nd }))
             .Select(pn => new NodeDependency { Node = pn.Node, Dependency = OutputNodes.SingleOrDefault(on => on.AbsoluteDestinationIncludingNode == pn.NodeDependencyPath) })
@@ -281,13 +286,18 @@ public partial class PipeContext : Node
         var nodePipesOrdering = OrderEvaluation(_nodePipesList);
 
         EvaluateNodePipes(nodePipesOrdering);
-        
+
         // TODO: This gets annoying, we only need this when an import has changed
         EditorInterface.Singleton.SaveScene();
     }
 
     protected override void Dispose(bool disposing)
     {
+        if (OS.HasFeature("editor_runtime"))
+        {
+            return;
+        }
+
         Pipelines.Instance.UnregisterContext(this);
         var allPipes = _pipelineNodeDict.Values;
 
@@ -298,6 +308,11 @@ public partial class PipeContext : Node
 
         base.Dispose(disposing);
     }
+
+}
+#else
+public partial class PipeContext : Node
+{
 
 }
 #endif

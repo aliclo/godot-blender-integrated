@@ -1,3 +1,4 @@
+#if TOOLS
 using System.Collections.Generic;
 using Godot;
 
@@ -14,3 +15,4 @@ public interface IPipe
     public void DisposePipe();
 
 }
+#endif

@@ -1,3 +1,4 @@
+#if TOOLS
 using System.Collections.Generic;
 using System.Linq;
 
@@ -22,3 +23,4 @@ public class DestinationHelper
     }
 
 }
+#endif
