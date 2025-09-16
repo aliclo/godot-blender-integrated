@@ -19,21 +19,26 @@ public partial class Pipelines : EditorPlugin
 	private ImportEventer _importEventer;
 	private List<PipeContext> _pipeContexts = new List<PipeContext>();
 
+    public Pipelines()
+    {
+        Instance = this;
+
+        _importEventer = new ImportEventer();
+        _importEventer.Init(this);
+    }
+
 	public override void _EnterTree()
-	{
-		// Initialization of the plugin goes here.
-		_importEventer = new ImportEventer();
-		_importEventer.Init(this);
-		_importEventer.SceneImportUpdated += SavePipelineScenes;
-		var pipeContextScript = GD.Load<CSharpScript>($"{ADDON_PATH}/{nameof(PipeContext)}.cs");
-		var pipeContextIcon = GD.Load<Texture2D>($"{ADDON_PATH}/{nameof(PipeContext)}.png");
-		AddCustomType(nameof(PipeContext), nameof(Node), pipeContextScript, pipeContextIcon);
-		AddScenePostImportPlugin(_importEventer);
-		_selection = EditorInterface.Singleton.GetSelection();
-		_selection.SelectionChanged += OnSelectionChanged;
-		SceneSaved += OnSave;
-		Instance = this;
-	}
+    {
+        // Initialization of the plugin goes here.
+        _importEventer.SceneImportUpdated += SavePipelineScenes;
+        var pipeContextScript = GD.Load<CSharpScript>($"{ADDON_PATH}/{nameof(PipeContext)}.cs");
+        var pipeContextIcon = GD.Load<Texture2D>($"{ADDON_PATH}/{nameof(PipeContext)}.png");
+        AddCustomType(nameof(PipeContext), nameof(Node), pipeContextScript, pipeContextIcon);
+        AddScenePostImportPlugin(_importEventer);
+        _selection = EditorInterface.Singleton.GetSelection();
+        _selection.SelectionChanged += OnSelectionChanged;
+        SceneSaved += OnSave;
+    }
 
 	public override void _ExitTree()
 	{
