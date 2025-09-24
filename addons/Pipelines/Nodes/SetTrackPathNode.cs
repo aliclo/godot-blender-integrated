@@ -1,10 +1,11 @@
 #if TOOLS
 using Godot;
+using Godot.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
 [Tool]
-public partial class SetTrackPathNode : PipelineNode, IReceivePipe
+public partial class SetTrackPathNode : PipelineNode
 {
 
     private partial class SetTrackPathNodeStore : GodotObject
@@ -16,8 +17,8 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
     }
 
     // TODO: Use this from the context instead of having to provide it to the context
-    private static readonly List<string[]> TOUCHED_PROPERTIES = new List<string[]>() {};
-    private static readonly List<string[]> UNTOUCHED_PROPERTIES = new List<string[]>() {};
+    private static readonly Array<Array<string>> TOUCHED_PROPERTIES = new Array<Array<string>>() {};
+    private static readonly Array<Array<string>> UNTOUCHED_PROPERTIES = new Array<Array<string>>() {};
 
     private SetTrackPathNodeStore _setTrackPathNodeStore;
     private PipeContext _context;
@@ -28,12 +29,12 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
     private ICloneablePipeValue _inputCloneablePipeValue;
     private CloneablePipeValue _cloneablePipeValue;
     private NodePath _targetNodePath;
-    private List<NodePath> _nodeDependencies = new List<NodePath>();
+    private Array<NodePath> _nodeDependencies = new Array<NodePath>();
 
-    public List<IReceivePipe> NextPipes { get; set; } = new List<IReceivePipe>();
-    private List<List<IReceivePipe>> _nodeConnections;
-    public override List<List<IReceivePipe>> NodeConnections => _nodeConnections;
-    public override List<NodePath> NodeDependencies => _nodeDependencies;
+    public override Array<PipelineNode> NextPipes { get; } = new Array<PipelineNode>();
+    private Array<Array<PipelineNode>> _nodeConnections;
+    public override Array<Array<PipelineNode>> NodeConnections => _nodeConnections;
+    public override Array<NodePath> NodeDependencies => _nodeDependencies;
 
     public override Variant GetData()
     {
@@ -52,9 +53,8 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
     {
         _context = context;
 
-        _nodeConnections = Enumerable.Range(0, 1)
-            .Select(n => new List<IReceivePipe>())
-            .ToList();
+        _nodeConnections = new Array<Array<PipelineNode>>(Enumerable.Range(0, 1)
+            .Select(n => new Array<PipelineNode>()));
 
         var animationNodeContainer = new HBoxContainer();
         AddChild(animationNodeContainer);
@@ -92,9 +92,9 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
         }
     }
 
-    public void Register()
+    public override void Register()
     {
-        _nodeDependencies = new List<NodePath>();
+        _nodeDependencies = new Array<NodePath>();
 
         if (_targetNodePath != null && !_targetNodePath.IsEmpty)
         {
@@ -102,7 +102,7 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
         }
     }
 
-    public ICloneablePipeValue Pipe(ICloneablePipeValue cloneablePipeValue)
+    public override ICloneablePipeValue PipeValue(ICloneablePipeValue cloneablePipeValue)
     {
         _inputCloneablePipeValue = cloneablePipeValue;
         var pipeValue = cloneablePipeValue.ClonePipeValue();
@@ -118,8 +118,8 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
         var resultPipeValue = new PipeValue()
         {
             Value = _animationPlayer,
-            TouchedProperties = pipeValue.TouchedProperties.Union(TOUCHED_PROPERTIES).ToList(),
-            UntouchedProperties = pipeValue.UntouchedProperties.Union(UNTOUCHED_PROPERTIES).ToList()
+            TouchedProperties = new Array<Array<string>>(pipeValue.TouchedProperties.Union(TOUCHED_PROPERTIES)),
+            UntouchedProperties = new Array<Array<string>>(pipeValue.UntouchedProperties.Union(UNTOUCHED_PROPERTIES))
         };
 
         _cloneablePipeValue = new CloneablePipeValue() { PipeValue = resultPipeValue };
@@ -158,12 +158,12 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
         return _cloneablePipeValue;
     }
 
-    public void Clean()
+    public override void Clean()
     {
         _animationPlayer = null;
     }
 
-    public void PipeDisconnect()
+    public override void PipeDisconnect()
     {
         Clean();
     }
@@ -196,13 +196,13 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
         EditorInterface.Singleton.MarkSceneAsUnsaved();
     }
 
-    public override void AddConnection(int index, List<IReceivePipe> receivePipes)
+    public override void AddConnection(int index, Array<PipelineNode> receivePipes)
     {
         _nodeConnections[index].AddRange(receivePipes);
         NextPipes.AddRange(receivePipes);
     }
 
-    public override void Connect(int index, List<IReceivePipe> receivePipes)
+    public override void Connect(int index, Array<PipelineNode> receivePipes)
     {
         _nodeConnections[index].AddRange(receivePipes);
         NextPipes.AddRange(receivePipes);
@@ -211,10 +211,14 @@ public partial class SetTrackPathNode : PipelineNode, IReceivePipe
         destinationHelper.AddReceivePipes(_context, receivePipes, _cloneablePipeValue == null ? null : _cloneablePipeValue);
     }
 
-    public override void Disconnect(int index, List<IReceivePipe> receivePipes)
+    public override void Disconnect(int index, Array<PipelineNode> receivePipes)
     {
-        _nodeConnections[index].RemoveAll(rp => receivePipes.Contains(rp));
-        NextPipes.RemoveAll(p => receivePipes.Contains(p));
+        var nodePortConnections = _nodeConnections[index];
+        foreach (var receivePipe in receivePipes)
+        {
+            nodePortConnections.Remove(receivePipe);
+            NextPipes.Remove(receivePipe);
+        }
 
         var destinationHelper = new DestinationHelper();
         destinationHelper.RemoveReceivePipes(receivePipes);

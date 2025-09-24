@@ -1,5 +1,6 @@
 #if TOOLS
 using Godot;
+using Godot.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using static SceneModelNode;
@@ -17,7 +18,7 @@ public partial class Pipelines : EditorPlugin
 	private EditorSelection _selection;
 	private PipelineAccess _pipelineAccess = new PipelineAccess();
 	private ImportEventer _importEventer;
-	private List<PipeContext> _pipeContexts = new List<PipeContext>();
+	private Array<PipeContext> _pipeContexts = new Array<PipeContext>();
 
     public Pipelines()
     {
@@ -68,6 +69,7 @@ public partial class Pipelines : EditorPlugin
 
 	private void OnSave(string filePath)
 	{
+        GD.Print("Pipeline editor: ", _pipelineEditor);
 		var filePipeContexts = _pipeContexts.Where(c => c.Owner.SceneFilePath == filePath);
 		foreach (var context in filePipeContexts)
 		{
@@ -82,10 +84,12 @@ public partial class Pipelines : EditorPlugin
 
 		if (pipelineContext != null)
 		{
+            GD.Print("Pipelines loading pipeline context: ", pipelineContext);
+            GD.Print("Output nodes: ", pipelineContext.OutputNodes);
 			if (_pipelineEditor != null)
-			{
-				ClearContextAndPipelineGraph();
-			}
+            {
+                ClearContextAndPipelineGraph();
+            }
 
 			_activeContext = pipelineContext;
 			_activeContext.TreeExiting += ClearContextAndPipelineGraph;
@@ -108,6 +112,7 @@ public partial class Pipelines : EditorPlugin
 		_activeContext.TreeExiting -= ClearContextAndPipelineGraph;
 		_pipelineAccess.Write(_activeContext.Owner.SceneFilePath, _activeContext);
 		_pipelineEditor.PipelineGraph.Cleanup();
+        GD.Print("Removing pipeline editor: ", _pipelineEditor);
 		RemoveControlFromBottomPanel(_pipelineEditor);
 		_pipelineEditor.QueueFree();
 		_pipelineEditor = null;

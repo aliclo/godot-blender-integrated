@@ -1,7 +1,9 @@
 #if TOOLS
-public class ValuePipe
+using Godot;
+
+public partial class ValuePipe: Node
 {
-    public IReceivePipe Pipe { get; set; }
+    public PipelineNode Pipe { get; set; }
     public ICloneablePipeValue CloneablePipeValue { get; set; }
 }
 #endif

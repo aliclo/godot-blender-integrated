@@ -3,9 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using Godot.Collections;
 
 [Tool]
-public partial class EdgifyNode : PipelineNode, IReceivePipe
+public partial class EdgifyNode : PipelineNode
 {
 
     private partial class EdgifyNodeStore : GodotObject
@@ -45,11 +46,11 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
     private const string EDGEIFY_NAME = "Edges";
 
     // TODO: Use this from the context instead of having to provide it to the context
-    private static readonly List<string[]> TOUCHED_PROPERTIES = new List<string[]>() {
-        new string[] { nameof(MeshInstance3D.Mesh).ToLower() }
+    private static readonly Array<Array<string>> TOUCHED_PROPERTIES = new Array<Array<string>>() {
+        new Array<string> { nameof(MeshInstance3D.Mesh).ToLower() }
     };
 
-    private static readonly List<string[]> UNTOUCHED_PROPERTIES = new List<string[]>() {};
+    private static readonly Array<Array<string>> UNTOUCHED_PROPERTIES = new Array<Array<string>>() {};
 
     private EdgifyNodeStore _edgifyNodeStore;
     private PipeContext _context;
@@ -72,11 +73,11 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
     private double _minY = -1000;
     private double _maxY = 1000;
 
-    public List<IReceivePipe> NextPipes { get; set; } = new List<IReceivePipe>();
-    private List<List<IReceivePipe>> _nodeConnections;
-    public override List<List<IReceivePipe>> NodeConnections => _nodeConnections;
+    public override Array<PipelineNode> NextPipes { get; } = new Array<PipelineNode>();
+    private Array<Array<PipelineNode>> _nodeConnections;
+    public override Array<Array<PipelineNode>> NodeConnections => _nodeConnections;
 
-    public override List<NodePath> NodeDependencies => new List<NodePath>();
+    public override Array<NodePath> NodeDependencies => new Array<NodePath>();
 
 
     public override Variant GetData()
@@ -102,9 +103,8 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
     {
         _context = context;
 
-        _nodeConnections = Enumerable.Range(0, 1)
-            .Select(n => new List<IReceivePipe>())
-            .ToList();
+        _nodeConnections = new Array<Array<PipelineNode>>(Enumerable.Range(0, 1)
+            .Select(n => new Array<PipelineNode>()));
 
         var meshNodeContainer = new HBoxContainer();
         AddChild(meshNodeContainer);
@@ -157,12 +157,12 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
         }
     }
 
-    public void Register()
+    public override void Register()
     {
         
     }
 
-    public ICloneablePipeValue Pipe(ICloneablePipeValue pipeValue)
+    public override ICloneablePipeValue PipeValue(ICloneablePipeValue pipeValue)
     {
         var obj = pipeValue.ClonePipeValue().Value;
 
@@ -385,12 +385,12 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
         return _cloneablePipeValue;
     }
 
-    public void Clean()
+    public override void Clean()
     {
         _meshInstance3D = null;
     }
 
-    public void PipeDisconnect()
+    public override void PipeDisconnect()
     {
         Clean();
     }
@@ -444,13 +444,13 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
         EditorInterface.Singleton.MarkSceneAsUnsaved();
     }
 
-    public override void AddConnection(int index, List<IReceivePipe> receivePipes)
+    public override void AddConnection(int index, Array<PipelineNode> receivePipes)
     {
         _nodeConnections[index].AddRange(receivePipes);
         NextPipes.AddRange(receivePipes);
     }
 
-    public override void Connect(int index, List<IReceivePipe> receivePipes)
+    public override void Connect(int index, Array<PipelineNode> receivePipes)
     {
         _nodeConnections[index].AddRange(receivePipes);
         NextPipes.AddRange(receivePipes);
@@ -459,10 +459,14 @@ public partial class EdgifyNode : PipelineNode, IReceivePipe
         destinationHelper.AddReceivePipes(_context, receivePipes, _cloneablePipeValue == null ? null : _cloneablePipeValue);
     }
 
-    public override void Disconnect(int index, List<IReceivePipe> receivePipes)
+    public override void Disconnect(int index, Array<PipelineNode> receivePipes)
     {
-        _nodeConnections[index].RemoveAll(rp => receivePipes.Contains(rp));
-        NextPipes.RemoveAll(p => receivePipes.Contains(p));
+        var nodePortConnections = _nodeConnections[index];
+        foreach (var receivePipe in receivePipes)
+        {
+            nodePortConnections.Remove(receivePipe);
+            NextPipes.Remove(receivePipe);
+        }
 
         var destinationHelper = new DestinationHelper();
         destinationHelper.RemoveReceivePipes(receivePipes);

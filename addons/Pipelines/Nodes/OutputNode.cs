@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using Godot.Collections;
 
 [Tool]
-public partial class OutputNode : PipelineNode, IReceivePipe
+public partial class OutputNode : PipelineNode
 {
 
     private partial class OutputNodeStore : GodotObject
@@ -26,9 +27,9 @@ public partial class OutputNode : PipelineNode, IReceivePipe
     private string _nodeName;
     private Node _node;
     private Node _previousNode;
-    private List<NodePath> _nodeDependencies = new List<NodePath>();
+    private Array<NodePath> _nodeDependencies = new Array<NodePath>();
 
-    public List<IReceivePipe> NextPipes => null;
+    public override Array<PipelineNode> NextPipes => [];
 
 
     public NodePath AbsoluteDestination { 
@@ -54,9 +55,9 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         }
     }
 
-    public override List<List<IReceivePipe>> NodeConnections => EMPTY_NODE_CONNECTIONS;
+    public override Array<Array<PipelineNode>> NodeConnections => EMPTY_NODE_CONNECTIONS;
 
-    public override List<NodePath> NodeDependencies => _nodeDependencies;
+    public override Array<NodePath> NodeDependencies => _nodeDependencies;
 
     public override Variant GetData()
     {
@@ -104,9 +105,9 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         }
     }
 
-    public void Register()
+    public override void Register()
     {
-        _nodeDependencies = new List<NodePath>();
+        _nodeDependencies = new Array<NodePath>();
 
         if (AbsoluteDestination != null && !AbsoluteDestination.IsEmpty)
         {
@@ -123,7 +124,7 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         }
     }
 
-    public ICloneablePipeValue Pipe(ICloneablePipeValue pipeValue)
+    public override ICloneablePipeValue PipeValue(ICloneablePipeValue pipeValue)
     {
         var obj = pipeValue.ClonePipeValue().Value;
         if (obj is not Node node)
@@ -172,7 +173,7 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         return null;
     }
 
-    public void Clean()
+    public override void Clean()
     {
         if (_node != null)
         {
@@ -187,7 +188,7 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         }
     }
 
-    public void PipeDisconnect()
+    public override void PipeDisconnect()
     {
         Clean();
     }
@@ -245,17 +246,17 @@ public partial class OutputNode : PipelineNode, IReceivePipe
         EditorInterface.Singleton.MarkSceneAsUnsaved();
     }
 
-    public override void AddConnection(int index, List<IReceivePipe> receivePipes)
+    public override void AddConnection(int index, Array<PipelineNode> receivePipes)
     {
         // No output connections
     }
 
-    public override void Connect(int index, List<IReceivePipe> receivePipes)
+    public override void Connect(int index, Array<PipelineNode> receivePipes)
     {
         // No output connections
     }
 
-    public override void Disconnect(int index, List<IReceivePipe> receivePipes)
+    public override void Disconnect(int index, Array<PipelineNode> receivePipes)
     {
         // No output connections
     }

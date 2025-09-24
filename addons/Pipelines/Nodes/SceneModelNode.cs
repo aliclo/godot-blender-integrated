@@ -1,11 +1,12 @@
 #if TOOLS
 using Godot;
+using Godot.Collections;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 [Tool]
-public partial class SceneModelNode : PipelineNode, IInputPipe
+public partial class SceneModelNode : PipelineNode
 {
 
     public enum Connections
@@ -41,37 +42,44 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
     private static readonly NodePath AnimationPlayerPath = new NodePath(ANIMATION_PLAYER_NAME);
 
     // TODO: Use this from the context instead of having to provide it to the context
-    private static readonly List<string[]> MESH_TOUCHED_PROPERTIES = new List<string[]>() {
-        new string[] { nameof(MeshInstance3D.Mesh).ToLower() }
+    private static readonly Array<Array<string>> MESH_TOUCHED_PROPERTIES = new Array<Array<string>>() {
+        new Array<string> { nameof(MeshInstance3D.Mesh).ToLower() }
     };
 
-    private static readonly List<string[]> MESH_UNTOUCHED_PROPERTIES = new List<string[]>() {};
+    private static readonly Array<Array<string>> MESH_UNTOUCHED_PROPERTIES = new Array<Array<string>>() { };
 
-    private static readonly List<string[]> COLLISION_SHAPE_TOUCHED_PROPERTIES = new List<string[]>() {
-        new string[] { nameof(CollisionShape3D.Shape).ToLower() }
+    private static readonly Array<Array<string>> COLLISION_SHAPE_TOUCHED_PROPERTIES = new Array<Array<string>>() {
+        new Array<string> { nameof(CollisionShape3D.Shape).ToLower() }
     };
 
-    private static readonly List<string[]> COLLISION_SHAPE_UNTOUCHED_PROPERTIES = new List<string[]>() {};
+    private static readonly Array<Array<string>> COLLISION_SHAPE_UNTOUCHED_PROPERTIES = new Array<Array<string>>() { };
 
-    private static readonly List<string[]> ANIMATION_PLAYER_TOUCHED_PROPERTIES = new List<string[]>() {};
+    private static readonly Array<Array<string>> ANIMATION_PLAYER_TOUCHED_PROPERTIES = new Array<Array<string>>() { };
 
     private PipeContext _context;
     private EditorResourcePicker _sceneModelPicker;
     private SceneModelNodeStore _sceneModelNodeStore;
 
-    private List<IReceivePipe> _meshPipes = new List<IReceivePipe>();
-    private List<IReceivePipe> _collisionShapePipes = new List<IReceivePipe>();
-    private List<IReceivePipe> _animationPlayerPipes = new List<IReceivePipe>();
+    private Array<PipelineNode> _meshPipes = new Array<PipelineNode>();
+    private Array<PipelineNode> _collisionShapePipes = new Array<PipelineNode>();
+    private Array<PipelineNode> _animationPlayerPipes = new Array<PipelineNode>();
     private ICloneablePipeValue _meshCloneablePipeValue;
     private ICloneablePipeValue _collisionShapeCloneablePipeValue;
     private ICloneablePipeValue _animationPlayerCloneablePipeValue;
 
-    private List<List<IReceivePipe>> _nodeConnections;
-    public override List<List<IReceivePipe>> NodeConnections => _nodeConnections;
-    public override List<NodePath> NodeDependencies => new List<NodePath>();
+    private Array<Array<PipelineNode>> _nodeConnections;
+    public override Array<Array<PipelineNode>> NodeConnections => _nodeConnections;
+    public override Array<NodePath> NodeDependencies => new Array<NodePath>();
+
+    public override Array<PipelineNode> NextPipes => [];
 
 
-    public override void AddConnection(int index, List<IReceivePipe> receivePipes)
+    public SceneModelNode()
+    {
+        GD.Print("Creating new SceneModelNode!!");
+    }
+
+    public override void AddConnection(int index, Array<PipelineNode> receivePipes)
     {
         _nodeConnections[index].AddRange(receivePipes);
 
@@ -90,7 +98,7 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         }
     }
 
-    public override void Connect(int index, List<IReceivePipe> receivePipes)
+    public override void Connect(int index, Array<PipelineNode> receivePipes)
     {
         _nodeConnections[index].AddRange(receivePipes);
 
@@ -109,9 +117,13 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         }
     }
 
-    public override void Disconnect(int index, List<IReceivePipe> receivePipes)
+    public override void Disconnect(int index, Array<PipelineNode> receivePipes)
     {
-        _nodeConnections[index].RemoveAll(rp => receivePipes.Contains(rp));
+        var nodePortConnections = _nodeConnections[index];
+        foreach (var receivePipe in receivePipes)
+        {
+            nodePortConnections.Remove(receivePipe);
+        }
 
         var connection = (Connections)index;
         switch (connection)
@@ -128,22 +140,22 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         }
     }
 
-    private void AddMeshConnections(IEnumerable<IReceivePipe> receivePipes)
+    private void AddMeshConnections(IEnumerable<PipelineNode> receivePipes)
     {
         _meshPipes.AddRange(receivePipes);
     }
 
-    private void AddCollisionShapeConnections(IEnumerable<IReceivePipe> receivePipes)
+    private void AddCollisionShapeConnections(IEnumerable<PipelineNode> receivePipes)
     {
         _collisionShapePipes.AddRange(receivePipes);
     }
 
-    private void AddAnimationPlayerConnections(IEnumerable<IReceivePipe> receivePipes)
+    private void AddAnimationPlayerConnections(IEnumerable<PipelineNode> receivePipes)
     {
         _animationPlayerPipes.AddRange(receivePipes);
     }
 
-    private void ConnectMesh(IList<IReceivePipe> receivePipes)
+    private void ConnectMesh(IList<PipelineNode> receivePipes)
     {
         _meshPipes.AddRange(receivePipes);
 
@@ -154,15 +166,18 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         }
     }
 
-    private void DisconnectMesh(IList<IReceivePipe> receivePipes)
+    private void DisconnectMesh(IList<PipelineNode> receivePipes)
     {
-        _meshPipes.RemoveAll(rp => receivePipes.Contains(rp));
+        foreach (var receivePipe in receivePipes)
+        {
+            _meshPipes.Remove(receivePipe);
+        }
 
         var destinationHelper = new DestinationHelper();
         destinationHelper.RemoveReceivePipes(receivePipes);
     }
 
-    private void ConnectCollisionShape(IList<IReceivePipe> receivePipes)
+    private void ConnectCollisionShape(IList<PipelineNode> receivePipes)
     {
         _collisionShapePipes.AddRange(receivePipes);
 
@@ -173,15 +188,18 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         }
     }
 
-    private void DisconnectCollisionShape(IList<IReceivePipe> receivePipes)
+    private void DisconnectCollisionShape(IList<PipelineNode> receivePipes)
     {
-        _collisionShapePipes.RemoveAll(rp => receivePipes.Contains(rp));
+        foreach (var receivePipe in receivePipes)
+        {
+            _collisionShapePipes.Remove(receivePipe);
+        }
 
         var destinationHelper = new DestinationHelper();
         destinationHelper.RemoveReceivePipes(receivePipes);
     }
 
-    private void ConnectAnimationPlayer(IList<IReceivePipe> receivePipes)
+    private void ConnectAnimationPlayer(IList<PipelineNode> receivePipes)
     {
         _animationPlayerPipes.AddRange(receivePipes);
 
@@ -192,9 +210,12 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         }
     }
 
-    private void DisconnectAnimationPlayer(IList<IReceivePipe> receivePipes)
+    private void DisconnectAnimationPlayer(IList<PipelineNode> receivePipes)
     {
-        _animationPlayerPipes.RemoveAll(rp => receivePipes.Contains(rp));
+        foreach (var receivePipe in receivePipes)
+        {
+            _animationPlayerPipes.Remove(receivePipe);
+        }
 
         var destinationHelper = new DestinationHelper();
         destinationHelper.RemoveReceivePipes(receivePipes);
@@ -217,9 +238,8 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
     {
         _context = context;
 
-        _nodeConnections = Enumerable.Range(0, 3)
-            .Select(n => new List<IReceivePipe>())
-            .ToList();
+        _nodeConnections = new Array<Array<PipelineNode>>(Enumerable.Range(0, 3)
+            .Select(n => new Array<PipelineNode>()));
 
         SetSlotEnabledRight(0, true);
         SetSlotTypeRight(0, (int)PipelineNodeTypes.Mesh);
@@ -257,7 +277,7 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         }
     }
 
-    public void Register()
+    public override void Register()
     {
         BlendNodes blendNodes;
         try
@@ -328,7 +348,7 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         var importedScene = scene.Instantiate<Node3D>();
         var mesh = importedScene.GetChild<MeshInstance3D>(0);
         var animationPlayer = importedScene.GetNodeOrNull<AnimationPlayer>(AnimationPlayerPath);
-        
+
         var staticBody = mesh.GetNodeOrNull<StaticBody3D>(StaticBody3DPath);
         var collisionShape = staticBody?.GetNodeOrNull<CollisionShape3D>(CollisionShape3DPath);
 
@@ -398,9 +418,9 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
         };
     }
 
-    private List<string[]> GetUntouchedProps(AnimationPlayer animationPlayer)
+    private Array<Array<string>> GetUntouchedProps(AnimationPlayer animationPlayer)
     {
-        var untouchedProps = new List<string[]>();
+        var untouchedProps = new Array<Array<string>>();
 
         var animationLibraryNames = animationPlayer.GetAnimationLibraryList();
         foreach (var animationLibraryName in animationLibraryNames)
@@ -437,7 +457,30 @@ public partial class SceneModelNode : PipelineNode, IInputPipe
 
     public override void DisposePipe()
     {
+        GD.Print("Disposing Pipe SceneModelNode!");
         ImportEventer.Instance.SceneImportUpdated -= SceneUpdated;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+        GD.Print("Disposing SceneModelNode!");
+    }
+
+    public override ICloneablePipeValue PipeValue(ICloneablePipeValue pipeValue)
+    {
+        GD.PrintErr($"{nameof(PipeValue)} unused, {nameof(SceneModelNode)} is an input node");
+        return null;
+    }
+
+    public override void Clean()
+    {
+        GD.PrintErr($"{nameof(Clean)} unused, {nameof(SceneModelNode)} is an input node");
+    }
+
+    public override void PipeDisconnect()
+    {
+        GD.PrintErr($"{nameof(PipeDisconnect)} unused, {nameof(SceneModelNode)} is an input node");
     }
 
 }

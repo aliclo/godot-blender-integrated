@@ -7,6 +7,8 @@ using Godot.Collections;
 public class NodeCopier
 {
 
+    private static readonly ArrayEqualityComparer<string> arrayEqualityComparer = new ArrayEqualityComparer<string>();
+
     private static readonly List<string> PropNamesToIgnore = new List<string>() {
         "Node",
         "_import_path",
@@ -41,7 +43,7 @@ public class NodeCopier
         "resource_path"
     };
 
-    public Node CopyValues(Node original, Node altered, List<string[]> excludePropPaths, List<string[]> includePropPaths)
+    public Node CopyValues(Node original, Node altered, Array<Array<string>> excludePropPaths, Array<Array<string>> includePropPaths)
     {
         if (original.GetType() != altered.GetType())
         {
@@ -75,7 +77,7 @@ public class NodeCopier
     // Since you can get finer excluded properties, keep track of which were processed
     // Remove these if they were used and traverse the rest
     private void CopyValues(Variant original, Variant altered, Variant result,
-        List<string[]> excludePropPaths, List<string[]> includePropPaths, int depth)
+        Array<Array<string>> excludePropPaths, Array<Array<string>> includePropPaths, int depth)
     {
         if (original.VariantType != altered.VariantType || altered.VariantType != result.VariantType)
         {
@@ -84,28 +86,29 @@ public class NodeCopier
 
         var variantType = original.VariantType;
 
-        var excludedPropPathsCurrentDepth = excludePropPaths
-            .Where(e => e.Count() - 1 == depth)
-            .ToList();
+        var excludedPropPathsCurrentDepth = new Array<Array<string>>(excludePropPaths
+            .Where(e => e.Count() - 1 == depth));
 
-        var includedPropPathsCurrentDepth = includePropPaths
-            .Where(i => i.Count() - 1 == depth)
-            .ToList();
+        var includedPropPathsCurrentDepth = new Array<Array<string>>(includePropPaths
+            .Where(i => i.Count() - 1 == depth));
 
-        var excludedPropPaths = excludedPropPathsCurrentDepth
-            .Select(epp => epp[depth])
-            .ToList();
+        GD.Print("Going to include current depth: ", string.Join(", ", includedPropPathsCurrentDepth.Select(ipp => ipp.Single()).Distinct()));
 
-        var includedPropPaths = includedPropPathsCurrentDepth
-            .Select(ipp => ipp[depth])
-            .ToList();
+        var excludedPropPaths = new Array<string>(excludedPropPathsCurrentDepth
+            .Select(epp => epp[depth]));
+
+        var includedPropPaths = new Array<string>(includedPropPathsCurrentDepth
+            .Select(ipp => ipp[depth]));
 
         var excludedPropPathsFutureDepth = excludePropPaths
-            .Except(excludedPropPathsCurrentDepth)
+            .Except(excludedPropPathsCurrentDepth, arrayEqualityComparer)
             .GroupBy(epp => epp[depth]);
 
+        GD.Print("Going to include future depth: ", string.Join(", ", includePropPaths.Except(includedPropPathsCurrentDepth, arrayEqualityComparer).Select(ipp => ipp.Single()).Distinct()));
+        GD.Print("Current depth: ", depth);
+
         var includedPropPathsFutureDepth = includePropPaths
-            .Except(includedPropPathsCurrentDepth)
+            .Except(includedPropPathsCurrentDepth, arrayEqualityComparer)
             .GroupBy(ipp => ipp[depth]);
 
         var propPathsFutureDepth = excludedPropPathsFutureDepth
@@ -152,13 +155,22 @@ public class NodeCopier
             foreach (var propPath in propPathsFutureDepth)
             {
                 var excludedCurrentPropPathsFutureDepth = excludedPropPathsFutureDepth
-                    .SingleOrDefault(epp => epp.Key == propPath)?.ToList() ?? new List<string[]>();
+                    .SingleOrDefault(epp => epp.Key == propPath);
 
                 var includedCurrentPropPathsFutureDepth = includedPropPathsFutureDepth
-                    .SingleOrDefault(epp => epp.Key == propPath)?.ToList() ?? new List<string[]>();
+                    .SingleOrDefault(epp => epp.Key == propPath);
 
+                var excludedCurrentPropPathsFutureDepthArray = excludedCurrentPropPathsFutureDepth == null
+                    ? new Array<Array<string>>()
+                    : new Array<Array<string>>(excludedCurrentPropPathsFutureDepth);
+
+                var includedCurrentPropPathsFutureDepthArray = includedCurrentPropPathsFutureDepth == null
+                    ? new Array<Array<string>>()
+                    : new Array<Array<string>>(includedCurrentPropPathsFutureDepth);
+
+                GD.Print("Going next dict for ", propPath);
                 CopyValues(originalDict[propPath], alteredDict[propPath], resultDict[propPath],
-                    excludedCurrentPropPathsFutureDepth, includedCurrentPropPathsFutureDepth, depth + 1);
+                    excludedCurrentPropPathsFutureDepthArray, includedCurrentPropPathsFutureDepthArray, depth + 1);
             }
         }
         else if (variantType == Variant.Type.Object)
@@ -204,13 +216,23 @@ public class NodeCopier
             foreach (var propPath in propPathsFutureDepth)
             {
                 var excludedCurrentPropPathsFutureDepth = excludedPropPathsFutureDepth
-                    .SingleOrDefault(epp => epp.Key == propPath)?.ToList() ?? new List<string[]>();
+                    .SingleOrDefault(epp => epp.Key == propPath);
 
                 var includedCurrentPropPathsFutureDepth = includedPropPathsFutureDepth
-                    .SingleOrDefault(epp => epp.Key == propPath)?.ToList() ?? new List<string[]>();
+                    .SingleOrDefault(epp => epp.Key == propPath);
+
+                var excludedCurrentPropPathsFutureDepthArray = excludedCurrentPropPathsFutureDepth == null
+                    ? new Array<Array<string>>()
+                    : new Array<Array<string>>(excludedCurrentPropPathsFutureDepth);
+
+                var includedCurrentPropPathsFutureDepthArray = includedCurrentPropPathsFutureDepth == null
+                    ? new Array<Array<string>>()
+                    : new Array<Array<string>>(includedCurrentPropPathsFutureDepth);
+
+                GD.Print("Going next obj for ", propPath);
 
                 CopyValues(originalObj.Get(propPath), alteredObj.Get(propPath), resultObj.Get(propPath),
-                    excludedCurrentPropPathsFutureDepth, includedCurrentPropPathsFutureDepth, depth + 1);
+                    excludedCurrentPropPathsFutureDepthArray, includedCurrentPropPathsFutureDepthArray, depth + 1);
             }
         }
     }

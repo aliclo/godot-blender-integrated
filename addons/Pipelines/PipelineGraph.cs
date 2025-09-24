@@ -40,6 +40,7 @@ public partial class PipelineGraph : GraphEdit
 
     public void OnLoadContext(PipeContext pipeContext)
     {
+        GD.Print("PipeGraph Loading pipe context: ", pipeContext);
         _context = pipeContext;
         foreach (var pipelineNode in _context.PipelineNodeDict.Values)
         {
@@ -122,13 +123,8 @@ public partial class PipelineGraph : GraphEdit
         var fromNode = _context.PipelineNodeDict[fromNodeName];
         var toNode = _context.PipelineNodeDict[toNodeName];
 
-        if (toNode is not IReceivePipe receivePipe)
-        {
-            return;
-        }
-
         ConnectNode(fromNode.Name, fromPort, toNode.Name, toPort);
-        fromNode.Connect(fromPort, new List<IReceivePipe>() { receivePipe });
+        fromNode.Connect(fromPort, new Array<PipelineNode>() { toNode });
     }
 
     private void DisconnectPipelineNode(string fromNodeName, int fromPort, string toNodeName, int toPort)
@@ -136,13 +132,8 @@ public partial class PipelineGraph : GraphEdit
         var fromNode = _context.PipelineNodeDict[fromNodeName];
         var toNode = _context.PipelineNodeDict[toNodeName];
 
-        if (toNode is not IReceivePipe receivePipe)
-        {
-            return;
-        }
-
         DisconnectNode(fromNode.Name, fromPort, toNode.Name, toPort);
-        fromNode.Disconnect(fromPort, new List<IReceivePipe>() { receivePipe });
+        fromNode.Disconnect(fromPort, new Array<PipelineNode>() { toNode });
     }
 
     public void RightClickMenuChosen(int id)

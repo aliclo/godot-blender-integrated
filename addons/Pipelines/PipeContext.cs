@@ -8,29 +8,15 @@ using Godot.Collections;
 public partial class PipeContext : Node
 {
 
-    private class NodePipes
-    {
-        public IReceivePipe CurrentNodePipe => Pipes[CurrentProgress];
-        public ICloneablePipeValue CurrentValue { get; set; }
-        public List<IReceivePipe> Pipes { get; set; }
-        public int CurrentProgress { get; set; } = 0;
-    }
-
-    private class NodeDependency
-    {
-        public PipelineNode Node { get; set; }
-        public IReceivePipe Dependency { get; set; }
-    }
-
     public Node RootNode => this;
-    public List<OutputNode> OutputNodes { get; set; }
+    public Array<OutputNode> OutputNodes { get; set; }
     public System.Collections.Generic.Dictionary<string, PipelineNode> PipelineNodeDict => _pipelineNodeDict;
 
     private readonly PipelineAccess _pipelineAccess = new PipelineAccess();
     private readonly PipeMapper _pipeMapper = new PipeMapper();
     private System.Collections.Generic.Dictionary<string, PipelineNode> _pipelineNodeDict = new System.Collections.Generic.Dictionary<string, PipelineNode>();
-    private List<NodePipes> _nodePipesList;
-    private List<NodeDependency> _nodeDependencies;
+    private Array<NodePipes> _nodePipesList;
+    private Array<NodeDependency> _nodeDependencies;
     private bool _completedFirstImport = false;
 
     public override void _Ready()
@@ -101,13 +87,7 @@ public partial class PipeContext : Node
             var inputNode = _pipelineNodeDict[pipelineConnection.FromNodeName];
             var toNode = _pipelineNodeDict[pipelineConnection.ToNodeName];
 
-            if (toNode is not IReceivePipe receiveNode)
-            {
-                GD.PrintErr("Node ", toNode.Name, " is not a receive node and cannot be connected to ", inputNode.Name);
-                continue;
-            }
-
-            inputNode.AddConnection(pipelineConnection.FromPort, new List<IReceivePipe>() { receiveNode });
+            inputNode.AddConnection(pipelineConnection.FromPort, new Array<PipelineNode>() { toNode });
         }
     }
 
@@ -149,14 +129,14 @@ public partial class PipeContext : Node
         _nodePipesList.AddRange(GetNodePipes(valuePipe));
     }
 
-    public void ReprocessPipe(List<ValuePipe> valuePipes)
+    public void ReprocessPipe(Array<ValuePipe> valuePipes)
     {
         foreach (var valuePipe in valuePipes)
         {
             valuePipe.Pipe.Register();
         }
 
-        var nodePipes = new List<NodePipes>();
+        var nodePipes = new Array<NodePipes>();
 
         foreach (var valuePipe in valuePipes)
         {
@@ -175,23 +155,23 @@ public partial class PipeContext : Node
         var pipe = valuePipe.Pipe;
         var cloneablePipeValue = valuePipe.CloneablePipeValue;
 
-        var processedPipes = new List<List<IReceivePipe>>();
-        var nodePipes = new List<List<IReceivePipe>>() { new List<IReceivePipe>() { pipe } };
-        List<List<IReceivePipe>> nodePipesWithNext;
+        var processedPipes = new Array<Array<PipelineNode>>();
+        var nodePipes = new Array<Array<PipelineNode>>() { new Array<PipelineNode>() { pipe } };
+        Array<Array<PipelineNode>> nodePipesWithNext;
 
         do
         {
-            nodePipesWithNext = nodePipes.Where(np => np.Last().NextPipes != null && np.Last().NextPipes.Any()).ToList();
+            nodePipesWithNext = new Array<Array<PipelineNode>>(nodePipes.Where(np => np.Last().NextPipes != null && np.Last().NextPipes.Any()));
             var nodePipesWithoutNext = nodePipes.Except(nodePipesWithNext);
             processedPipes.AddRange(nodePipesWithoutNext);
 
-            var newNodePipes = new List<List<IReceivePipe>>();
+            var newNodePipes = new Array<Array<PipelineNode>>();
             foreach (var nodePipe in nodePipesWithNext)
             {
                 var lastPipe = nodePipe.Last();
                 newNodePipes.AddRange(lastPipe.NextPipes.Select(np =>
                 {
-                    var clonedNodePipe = new List<IReceivePipe>(nodePipe);
+                    var clonedNodePipe = new Array<PipelineNode>(nodePipe);
                     clonedNodePipe.Add(np);
                     return clonedNodePipe;
                 }));
@@ -207,15 +187,15 @@ public partial class PipeContext : Node
         });
     }
 
-    private List<NodePipes> OrderEvaluation(List<NodePipes> nodePipesList)
+    private Array<NodePipes> OrderEvaluation(Array<NodePipes> nodePipesList)
     {
-        var nodePipesOrdering = new List<NodePipes>();
+        var nodePipesOrdering = new Array<NodePipes>();
         var evaluateNodePipes = new List<NodePipes>(nodePipesList);
         var nodesToBeProcessed = nodePipesList
             .SelectMany(np => np.Pipes)
             .Distinct();
 
-        var processedPipes = new List<IReceivePipe>();
+        var processedPipes = new Array<PipelineNode>();
 
         while (evaluateNodePipes.Any())
         {
@@ -235,7 +215,7 @@ public partial class PipeContext : Node
         return nodePipesOrdering;
     }
 
-    private void EvaluateNodePipes(List<NodePipes> nodePipesOrdering)
+    private void EvaluateNodePipes(Array<NodePipes> nodePipesOrdering)
     {
         foreach (var p in nodePipesOrdering.Reverse<NodePipes>())
         {
@@ -246,23 +226,25 @@ public partial class PipeContext : Node
         var nodePipesToProcess = nodePipesOrdering.Where(npo => npo.CurrentValue != null);
         foreach (var p in nodePipesToProcess)
         {
-            p.CurrentValue = p.CurrentNodePipe.Pipe(p.CurrentValue);
+            p.CurrentValue = p.CurrentNodePipe.PipeValue(p.CurrentValue);
             p.CurrentProgress++;
         }
     }
 
     private void Process()
     {
-        OutputNodes = _pipelineNodeDict.Values
+        GD.Print("PipeContext process!!");
+        OutputNodes = new Array<OutputNode>(_pipelineNodeDict.Values
             .Where(n => n is OutputNode)
-            .Select(n => (OutputNode)n)
-            .ToList();
+            .Select(n => (OutputNode)n));
 
-        var inputPipes = _pipelineNodeDict.Values
-            .Where(n => n is IInputPipe)
-            .Select(n => (IInputPipe)n);
+        var receiverPipes = _pipelineNodeDict.Values
+            .SelectMany(p => p.NextPipes)
+            .Distinct();
 
-        _nodePipesList = new List<NodePipes>();
+        var inputPipes = _pipelineNodeDict.Values.Except(receiverPipes);
+
+        _nodePipesList = new Array<NodePipes>();
 
         foreach (var inputPipe in inputPipes)
         {
@@ -277,11 +259,10 @@ public partial class PipeContext : Node
             }
         }
 
-        _nodeDependencies = _pipelineNodeDict.Values
+        _nodeDependencies = new Array<NodeDependency>(_pipelineNodeDict.Values
             .SelectMany(pn => pn.NodeDependencies.Select(nd => new { Node = pn, NodeDependencyPath = nd }))
             .Select(pn => new NodeDependency { Node = pn.Node, Dependency = OutputNodes.SingleOrDefault(on => on.AbsoluteDestinationIncludingNode == pn.NodeDependencyPath) })
-            .Where(pn => pn.Dependency != null)
-            .ToList();
+            .Where(pn => pn.Dependency != null));
 
         var nodePipesOrdering = OrderEvaluation(_nodePipesList);
 

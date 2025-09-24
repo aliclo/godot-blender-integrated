@@ -1,5 +1,6 @@
 using System.Linq;
 using Godot;
+using Godot.Collections;
 
 public partial class CloneablePipeValue : GodotObject, ICloneablePipeValue {
     
@@ -23,8 +24,8 @@ public partial class CloneablePipeValue : GodotObject, ICloneablePipeValue {
         var dupPipeValue = new PipeValue()
         {
             Value = duplicateValue,
-            TouchedProperties = _pipeValue.TouchedProperties.Select(tp => tp.ToArray()).ToList(),
-            UntouchedProperties = _pipeValue.UntouchedProperties.Select(up => up.ToArray()).ToList(),
+            TouchedProperties = new Array<Array<string>>(_pipeValue.TouchedProperties.Select(tp => new Array<string>(tp))),
+            UntouchedProperties = new Array<Array<string>>(_pipeValue.UntouchedProperties.Select(up => new Array<string>(up))),
         };
 
         EmitSignal(SignalName.OnClone, dupPipeValue);

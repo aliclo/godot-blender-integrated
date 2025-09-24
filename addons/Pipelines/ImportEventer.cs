@@ -20,11 +20,13 @@ public partial class ImportEventer : EditorScenePostImportPlugin
 
     public override void _GetImportOptions(string path)
     {
+        GD.Print("Get import options");
         _filePath = path;
     }
 
     public override void _PostProcess(Node scene)
     {
+        GD.Print("PostProcess");
         var sceneFilePath = _filePath;
 
         var gdTimer = new Timer();
@@ -36,6 +38,7 @@ public partial class ImportEventer : EditorScenePostImportPlugin
 
     private void RaiseSceneImportUpdated(string filePath)
     {
+        GD.Print("RaiseSceneImportUpdated");
         EmitSignal(SignalName.SceneImportUpdated, filePath);
     }
 

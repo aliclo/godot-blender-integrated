@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 [Tool]
-public partial class SetPropertyNode : PipelineNode, IReceivePipe
+public partial class SetPropertyNode : PipelineNode
 {
 
     private partial class SetPropertyNodeStore : GodotObject
@@ -21,7 +21,7 @@ public partial class SetPropertyNode : PipelineNode, IReceivePipe
     }
 
     // TODO: Use this from the context instead of having to provide it to the context
-    private static readonly List<string[]> UNTOUCHED_PROPERTIES = new List<string[]>() {};
+    private static readonly Array<Array<string>> UNTOUCHED_PROPERTIES = new Array<Array<string>>() {};
 
     private SetPropertyNodeStore _setPropertyNodeStore;
     private PipeContext _context;
@@ -36,10 +36,10 @@ public partial class SetPropertyNode : PipelineNode, IReceivePipe
     private string _previousPropName;
     private string _propValue;
 
-    public List<IReceivePipe> NextPipes { get; set; } = new List<IReceivePipe>();
-    private List<List<IReceivePipe>> _nodeConnections;
-    public override List<List<IReceivePipe>> NodeConnections => _nodeConnections;
-    public override List<NodePath> NodeDependencies => new List<NodePath>();
+    public override Array<PipelineNode> NextPipes { get; } = new Array<PipelineNode>();
+    private Array<Array<PipelineNode>> _nodeConnections;
+    public override Array<Array<PipelineNode>> NodeConnections => _nodeConnections;
+    public override Array<NodePath> NodeDependencies => new Array<NodePath>();
 
     public override Variant GetData()
     {
@@ -60,9 +60,8 @@ public partial class SetPropertyNode : PipelineNode, IReceivePipe
     {
         _context = context;
 
-        _nodeConnections = Enumerable.Range(0, 1)
-            .Select(n => new List<IReceivePipe>())
-            .ToList();
+        _nodeConnections = new Array<Array<PipelineNode>>(Enumerable.Range(0, 1)
+            .Select(n => new Array<PipelineNode>()));
 
         var setNodeContainer = new HBoxContainer();
         AddChild(setNodeContainer);
@@ -107,12 +106,12 @@ public partial class SetPropertyNode : PipelineNode, IReceivePipe
         }
     }
 
-    public void Register()
+    public override void Register()
     {
         
     }
 
-    public ICloneablePipeValue Pipe(ICloneablePipeValue cloneablePipeValue)
+    public override ICloneablePipeValue PipeValue(ICloneablePipeValue cloneablePipeValue)
     {
         _inputCloneablePipeValue = cloneablePipeValue;
         var pipeValue = cloneablePipeValue.ClonePipeValue();
@@ -161,7 +160,7 @@ public partial class SetPropertyNode : PipelineNode, IReceivePipe
         {
             Value = node,
             TouchedProperties = touchedProperties,
-            UntouchedProperties = pipeValue.UntouchedProperties.Union(UNTOUCHED_PROPERTIES).ToList()
+            UntouchedProperties = new Array<Array<string>>(pipeValue.UntouchedProperties.Union(UNTOUCHED_PROPERTIES))
         };
 
         _cloneablePipeValue = new CloneablePipeValue() { PipeValue = resultPipeValue };
@@ -169,12 +168,12 @@ public partial class SetPropertyNode : PipelineNode, IReceivePipe
         return _cloneablePipeValue;
     }
 
-    public void Clean()
+    public override void Clean()
     {
         //_cloneablePipeValue = null;
     }
 
-    public void PipeDisconnect()
+    public override void PipeDisconnect()
     {
         Clean();
     }
@@ -202,13 +201,13 @@ public partial class SetPropertyNode : PipelineNode, IReceivePipe
         EditorInterface.Singleton.MarkSceneAsUnsaved();
     }
 
-    public override void AddConnection(int index, List<IReceivePipe> receivePipes)
+    public override void AddConnection(int index, Array<PipelineNode> receivePipes)
     {
         _nodeConnections[index].AddRange(receivePipes);
         NextPipes.AddRange(receivePipes);
     }
 
-    public override void Connect(int index, List<IReceivePipe> receivePipes)
+    public override void Connect(int index, Array<PipelineNode> receivePipes)
     {
         _nodeConnections[index].AddRange(receivePipes);
         NextPipes.AddRange(receivePipes);
@@ -217,10 +216,14 @@ public partial class SetPropertyNode : PipelineNode, IReceivePipe
         destinationHelper.AddReceivePipes(_context, receivePipes, _cloneablePipeValue == null ? null : _cloneablePipeValue);
     }
 
-    public override void Disconnect(int index, List<IReceivePipe> receivePipes)
+    public override void Disconnect(int index, Array<PipelineNode> receivePipes)
     {
-        _nodeConnections[index].RemoveAll(rp => receivePipes.Contains(rp));
-        NextPipes.RemoveAll(p => receivePipes.Contains(p));
+        var nodePortConnections = _nodeConnections[index];
+        foreach (var receivePipe in receivePipes)
+        {
+            nodePortConnections.Remove(receivePipe);
+            NextPipes.Remove(receivePipe);
+        }
 
         var destinationHelper = new DestinationHelper();
         destinationHelper.RemoveReceivePipes(receivePipes);

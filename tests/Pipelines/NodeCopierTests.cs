@@ -1,6 +1,8 @@
 
 using System.Collections.Generic;
+using System.Linq;
 using GdUnit4;
+using Godot.Collections;
 
 [TestSuite]
 public class ObjectCopierTests
@@ -40,7 +42,7 @@ public class ObjectCopierTests
         };
 
         // Act
-        var result = objectCopier.CopyValues(original, altered, new List<string[]>(), new List<string[]>());
+        var result = objectCopier.CopyValues(original, altered, new Array<Array<string>>(), new Array<Array<string>>());
 
         // Assert
         var equalityHelper = new EqualityHelper();
@@ -95,7 +97,7 @@ public class ObjectCopierTests
         };
 
         // Act
-        var result = objectCopier.CopyValues(original, altered, new List<string[]>() { new string[] { "Nested" } }, new List<string[]>());
+        var result = objectCopier.CopyValues(original, altered, new Array<Array<string>>() { new Array<string>() { "Nested" } }, new Array<Array<string>>());
 
         // Assert
         var equalityHelper = new EqualityHelper();
@@ -150,7 +152,7 @@ public class ObjectCopierTests
         };
 
         // Act
-        var result = objectCopier.CopyValues(original, altered, new List<string[]>() { new string[] { "Nested" } }, new List<string[]>() { new string[] { "Nested", "Nested" } });
+        var result = objectCopier.CopyValues(original, altered, new Array<Array<string>>() { new Array<string> { "Nested" } }, new Array<Array<string>>() { new Array<string> { "Nested", "Nested" } });
 
         // Assert
         var equalityHelper = new EqualityHelper();
