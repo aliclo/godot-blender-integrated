@@ -40,7 +40,6 @@ public partial class PipelineGraph : GraphEdit
 
     public void OnLoadContext(PipeContext pipeContext)
     {
-        GD.Print("PipeGraph Loading pipe context: ", pipeContext);
         _context = pipeContext;
         foreach (var pipelineNode in _context.PipelineNodeDict.Values)
         {

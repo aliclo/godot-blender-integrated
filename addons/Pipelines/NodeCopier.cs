@@ -92,8 +92,6 @@ public class NodeCopier
         var includedPropPathsCurrentDepth = new Array<Array<string>>(includePropPaths
             .Where(i => i.Count() - 1 == depth));
 
-        GD.Print("Going to include current depth: ", string.Join(", ", includedPropPathsCurrentDepth.Select(ipp => ipp.Single()).Distinct()));
-
         var excludedPropPaths = new Array<string>(excludedPropPathsCurrentDepth
             .Select(epp => epp[depth]));
 
@@ -103,9 +101,6 @@ public class NodeCopier
         var excludedPropPathsFutureDepth = excludePropPaths
             .Except(excludedPropPathsCurrentDepth, arrayEqualityComparer)
             .GroupBy(epp => epp[depth]);
-
-        GD.Print("Going to include future depth: ", string.Join(", ", includePropPaths.Except(includedPropPathsCurrentDepth, arrayEqualityComparer).Select(ipp => ipp.Single()).Distinct()));
-        GD.Print("Current depth: ", depth);
 
         var includedPropPathsFutureDepth = includePropPaths
             .Except(includedPropPathsCurrentDepth, arrayEqualityComparer)
@@ -168,7 +163,6 @@ public class NodeCopier
                     ? new Array<Array<string>>()
                     : new Array<Array<string>>(includedCurrentPropPathsFutureDepth);
 
-                GD.Print("Going next dict for ", propPath);
                 CopyValues(originalDict[propPath], alteredDict[propPath], resultDict[propPath],
                     excludedCurrentPropPathsFutureDepthArray, includedCurrentPropPathsFutureDepthArray, depth + 1);
             }
@@ -228,8 +222,6 @@ public class NodeCopier
                 var includedCurrentPropPathsFutureDepthArray = includedCurrentPropPathsFutureDepth == null
                     ? new Array<Array<string>>()
                     : new Array<Array<string>>(includedCurrentPropPathsFutureDepth);
-
-                GD.Print("Going next obj for ", propPath);
 
                 CopyValues(originalObj.Get(propPath), alteredObj.Get(propPath), resultObj.Get(propPath),
                     excludedCurrentPropPathsFutureDepthArray, includedCurrentPropPathsFutureDepthArray, depth + 1);

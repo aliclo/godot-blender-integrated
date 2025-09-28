@@ -76,7 +76,6 @@ public partial class SceneModelNode : PipelineNode
 
     public SceneModelNode()
     {
-        GD.Print("Creating new SceneModelNode!!");
         ImportEventer.Instance.SceneImportUpdated += SceneUpdated;
     }
 
@@ -461,14 +460,12 @@ public partial class SceneModelNode : PipelineNode
 
     public override void _ExitTree()
     {
-        GD.Print("SceneModelNode exit tree!");
         _sceneModelPicker.ResourceChanged -= SceneChanged;
     }
 
 
     protected override void Dispose(bool disposing)
     {
-        GD.Print("Disposing SceneModelNode!");
         ImportEventer.Instance.SceneImportUpdated -= SceneUpdated;
         base.Dispose(disposing);
     }

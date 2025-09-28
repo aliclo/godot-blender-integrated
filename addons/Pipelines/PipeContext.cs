@@ -240,7 +240,6 @@ public partial class PipeContext : Node
 
     private void Process()
     {
-        GD.Print("PipeContext process!!");
         OutputNodes = new Array<OutputNode>(_pipelineNodeDict.Values
             .Where(n => n is OutputNode)
             .Select(n => (OutputNode)n));
@@ -281,7 +280,6 @@ public partial class PipeContext : Node
 
     public override void _ExitTree()
     {
-        GD.Print("PipeContext Exit tree!");
         if (OS.HasFeature("editor_runtime"))
         {
             return;

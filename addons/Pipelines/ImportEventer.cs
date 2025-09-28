@@ -23,14 +23,11 @@ public partial class ImportEventer : EditorScenePostImportPlugin
 
     public override void _GetImportOptions(string path)
     {
-        GD.Print("Get import options");
         _filePath = path;
     }
 
     public override void _PostProcess(Node scene)
     {
-        GD.Print("PostProcess");
-
         // Warning: If an import is done too close to another, then this will not catch the others until the first one is completed after the delay
         // This means that when another is done that would need more time, not enough time will be given
         if (_timer != null)
@@ -48,7 +45,6 @@ public partial class ImportEventer : EditorScenePostImportPlugin
     private void RaiseSceneImportUpdated()
     {
         _timer.Timeout -= RaiseSceneImportUpdated;
-        GD.Print("RaiseSceneImportUpdated");
         EmitSignal(SignalName.SceneImportUpdated, _filePath);
         _pipelines.RemoveChild(_timer);
     }
