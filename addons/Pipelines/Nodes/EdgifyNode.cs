@@ -610,11 +610,5 @@ public partial class EdgifyNode : PipelineNode
         _maxYLineEdit.NumberChanged -= MaxYChanged;
     }
 
-
-    public override void DisposePipe()
-    {
-        // Nothing to dispose
-    }
-
 }
 #endif

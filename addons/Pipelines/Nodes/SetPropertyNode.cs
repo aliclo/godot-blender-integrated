@@ -235,10 +235,5 @@ public partial class SetPropertyNode : PipelineNode
         _valueEdit.TextChanged -= PropValueChanged;
     }
 
-    public override void DisposePipe()
-    {
-        // Nothing to dispose
-    }
-
 }
 #endif

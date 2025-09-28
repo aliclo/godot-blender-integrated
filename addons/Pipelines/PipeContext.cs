@@ -286,12 +286,6 @@ public partial class PipeContext : Node
         }
 
         Pipelines.Instance.UnregisterContext(this);
-        var allPipes = _pipelineNodeDict.Values;
-
-        foreach (var pipe in allPipes)
-        {
-            pipe.DisposePipe();
-        }
     }
 
 }

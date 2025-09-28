@@ -14,7 +14,6 @@ public abstract partial class PipelineNode : GraphNode, IStorable
     public abstract void AddConnection(int index, Array<PipelineNode> receivePipes);
     public abstract void Connect(int index, Array<PipelineNode> receivePipes);
     public abstract void Disconnect(int index, Array<PipelineNode> receivePipes);
-    public abstract void DisposePipe();
     
     public abstract Array<PipelineNode> NextPipes { get; }
     public abstract void Register();

@@ -268,12 +268,6 @@ public partial class OutputNode : PipelineNode
         // No output connections
     }
 
-    public override void DisposePipe()
-    {
-        // Nothing to dispose
-        GD.Print("Disposed OutputNode!");
-    }
-
     public override void _ExitTree()
     {
         GD.Print("Exiting tree for OutputNode!");

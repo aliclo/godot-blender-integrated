@@ -247,11 +247,5 @@ public partial class SetTrackPathNode : PipelineNode
         _outputNodePicker.Pressed -= OutputNodePickerPressed;
     }
 
-
-    public override void DisposePipe()
-    {
-        // Nothing to dispose
-    }
-
 }
 #endif

@@ -459,11 +459,6 @@ public partial class SceneModelNode : PipelineNode
         }
     }
 
-    public override void DisposePipe()
-    {
-        GD.Print("Disposing Pipe SceneModelNode!");
-    }
-
     public override void _ExitTree()
     {
         GD.Print("SceneModelNode exit tree!");
