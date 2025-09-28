@@ -1,7 +1,8 @@
 #if TOOLS
+using Godot;
 using Godot.Collections;
 
-public class PipeMapper
+public partial class PipeMapper: Node
 {
 
     public PipelineNodeStore Map(PipelineNode pipelineNode)

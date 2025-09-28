@@ -12,8 +12,8 @@ public partial class PipeContext : Node
     public Array<OutputNode> OutputNodes { get; set; }
     public Godot.Collections.Dictionary<string, PipelineNode> PipelineNodeDict => _pipelineNodeDict;
 
-    private readonly PipelineAccess _pipelineAccess = new PipelineAccess();
-    private readonly PipeMapper _pipeMapper = new PipeMapper();
+    private PipelineAccess _pipelineAccess;
+    private PipeMapper _pipeMapper;
     private Godot.Collections.Dictionary<string, PipelineNode> _pipelineNodeDict;
     private Array<NodePipes> _nodePipesList;
     private Array<NodeDependency> _nodeDependencies;
@@ -26,6 +26,8 @@ public partial class PipeContext : Node
             return;
         }
 
+        _pipelineAccess = new PipelineAccess();
+        _pipeMapper = new PipeMapper();
         _pipelineNodeDict = new Godot.Collections.Dictionary<string, PipelineNode>();
 
         Pipelines.Instance.RegisterContext(this);

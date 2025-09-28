@@ -4,7 +4,7 @@ using System.Linq;
 using Godot;
 using Godot.Collections;
 
-public class PipelineAccess
+public partial class PipelineAccess: Node
 {
 
     public Array<PipelineContextStore> Read(string sceneFilePath)
