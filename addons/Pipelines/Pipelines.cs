@@ -18,7 +18,7 @@ public partial class Pipelines : EditorPlugin
 	private EditorSelection _selection;
 	private PipelineAccess _pipelineAccess = new PipelineAccess();
 	private ImportEventer _importEventer;
-	private Array<PipeContext> _pipeContexts = new Array<PipeContext>();
+	private Array<PipeContext> _pipeContexts;
 
     public Pipelines()
     {
@@ -31,6 +31,7 @@ public partial class Pipelines : EditorPlugin
 	public override void _EnterTree()
     {
         // Initialization of the plugin goes here.
+        _pipeContexts = new Array<PipeContext>();
         _importEventer.SceneImportUpdated += SavePipelineScenes;
         var pipeContextScript = GD.Load<CSharpScript>($"{ADDON_PATH}/{nameof(PipeContext)}.cs");
         var pipeContextIcon = GD.Load<Texture2D>($"{ADDON_PATH}/{nameof(PipeContext)}.png");
@@ -102,9 +103,9 @@ public partial class Pipelines : EditorPlugin
 
 	private void InitPipelineEditor()
 	{
+        _pipelineEditor.Ready -= InitPipelineEditor;
 		_pipelineEditor.PipelineGraph.UndoRedo = GetUndoRedo();
 		_pipelineEditor.PipelineGraph.OnLoadContext(_activeContext);
-		_pipelineEditor.Ready -= InitPipelineEditor;
 	}
 
 	private void ClearContextAndPipelineGraph()

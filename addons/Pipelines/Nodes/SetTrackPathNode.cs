@@ -1,7 +1,6 @@
 #if TOOLS
 using Godot;
 using Godot.Collections;
-using System.Collections.Generic;
 using System.Linq;
 
 [Tool]
@@ -29,7 +28,9 @@ public partial class SetTrackPathNode : PipelineNode
     private ICloneablePipeValue _inputCloneablePipeValue;
     private CloneablePipeValue _cloneablePipeValue;
     private NodePath _targetNodePath;
-    private Array<NodePath> _nodeDependencies = new Array<NodePath>();
+    private Node _targetNode;
+    private Array<ClonedRegister> _clonedRegister;
+    private Array<NodePath> _nodeDependencies;
 
     public override Array<PipelineNode> NextPipes { get; } = new Array<PipelineNode>();
     private Array<Array<PipelineNode>> _nodeConnections;
@@ -52,6 +53,8 @@ public partial class SetTrackPathNode : PipelineNode
     public override void Init(PipeContext context)
     {
         _context = context;
+        _clonedRegister = new Array<ClonedRegister>();
+        _nodeDependencies = new Array<NodePath>();
 
         _nodeConnections = new Array<Array<PipelineNode>>(Enumerable.Range(0, 1)
             .Select(n => new Array<PipelineNode>()));
@@ -126,28 +129,11 @@ public partial class SetTrackPathNode : PipelineNode
 
         if (_targetNodePath != null && !_targetNodePath.IsEmpty)
         {
-            var targetNode = _context.RootNode.GetNodeOrNull(_targetNodePath);
+            _targetNode = _context.RootNode.GetNodeOrNull(_targetNodePath);
 
-            if (targetNode != null)
+            if (_targetNode != null)
             {
-                _cloneablePipeValue.OnClone += (clonedPipeValue) => clonedPipeValue.Value.TreeEntered += () =>
-                {
-                    string targetNodeRelativePath = clonedPipeValue.Value.GetNode(_animationPlayer.RootNode).GetPathTo(targetNode);
-                    foreach (var animationLibraryName in _animationPlayer.GetAnimationLibraryList())
-                    {
-                        var animationLibrary = _animationPlayer.GetAnimationLibrary(animationLibraryName);
-
-                        foreach (var animationName in animationLibrary.GetAnimationList())
-                        {
-                            var animation = animationLibrary.GetAnimation(animationName);
-
-                            for (int ti = 0; ti < animation.GetTrackCount(); ti++)
-                            {
-                                animation.TrackSetPath(ti, clonedPipeValue.Value.GetNode(_animationPlayer.RootNode).GetPathTo(targetNode));
-                            }
-                        }
-                    }
-                };
+                _cloneablePipeValue.OnClone += OnValueCloned;
             }
             else
             {
@@ -156,6 +142,38 @@ public partial class SetTrackPathNode : PipelineNode
         }
 
         return _cloneablePipeValue;
+    }
+
+    private void OnValueCloned(PipeValue clonedPipeValue)
+    {
+        var action = () => OnValueTreeEntered(clonedPipeValue);
+        _clonedRegister.Add(new ClonedRegister()
+        {
+            Action = action,
+            PipeValue = clonedPipeValue
+        });
+        clonedPipeValue.Value.TreeEntered += action;
+    }
+
+    private void OnValueTreeEntered(PipeValue clonedPipeValue)
+    {
+        var clonedRegister = _clonedRegister.Single(cr => cr.PipeValue == clonedPipeValue);
+        clonedPipeValue.Value.TreeEntered -= clonedRegister.Action;
+        string targetNodeRelativePath = clonedPipeValue.Value.GetNode(_animationPlayer.RootNode).GetPathTo(_targetNode);
+        foreach (var animationLibraryName in _animationPlayer.GetAnimationLibraryList())
+        {
+            var animationLibrary = _animationPlayer.GetAnimationLibrary(animationLibraryName);
+
+            foreach (var animationName in animationLibrary.GetAnimationList())
+            {
+                var animation = animationLibrary.GetAnimation(animationName);
+
+                for (int ti = 0; ti < animation.GetTrackCount(); ti++)
+                {
+                    animation.TrackSetPath(ti, clonedPipeValue.Value.GetNode(_animationPlayer.RootNode).GetPathTo(_targetNode));
+                }
+            }
+        }
     }
 
     public override void Clean()
@@ -223,6 +241,12 @@ public partial class SetTrackPathNode : PipelineNode
         var destinationHelper = new DestinationHelper();
         destinationHelper.RemoveReceivePipes(receivePipes);
     }
+
+    public override void _ExitTree()
+    {
+        _outputNodePicker.Pressed -= OutputNodePickerPressed;
+    }
+
 
     public override void DisposePipe()
     {

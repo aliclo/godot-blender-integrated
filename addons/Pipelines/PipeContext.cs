@@ -10,11 +10,11 @@ public partial class PipeContext : Node
 
     public Node RootNode => this;
     public Array<OutputNode> OutputNodes { get; set; }
-    public System.Collections.Generic.Dictionary<string, PipelineNode> PipelineNodeDict => _pipelineNodeDict;
+    public Godot.Collections.Dictionary<string, PipelineNode> PipelineNodeDict => _pipelineNodeDict;
 
     private readonly PipelineAccess _pipelineAccess = new PipelineAccess();
     private readonly PipeMapper _pipeMapper = new PipeMapper();
-    private System.Collections.Generic.Dictionary<string, PipelineNode> _pipelineNodeDict = new System.Collections.Generic.Dictionary<string, PipelineNode>();
+    private Godot.Collections.Dictionary<string, PipelineNode> _pipelineNodeDict;
     private Array<NodePipes> _nodePipesList;
     private Array<NodeDependency> _nodeDependencies;
     private bool _completedFirstImport = false;
@@ -25,6 +25,8 @@ public partial class PipeContext : Node
         {
             return;
         }
+
+        _pipelineNodeDict = new Godot.Collections.Dictionary<string, PipelineNode>();
 
         Pipelines.Instance.RegisterContext(this);
 
@@ -45,13 +47,16 @@ public partial class PipeContext : Node
             }
             else
             {
-                Owner.Ready += () =>
-                {
-                    Process();
-                    _completedFirstImport = true;
-                };
+                Owner.Ready += OnOwnerReady;
             }
         }
+    }
+
+    private void OnOwnerReady()
+    {
+        Owner.Ready -= OnOwnerReady;
+        Process();
+        _completedFirstImport = true;
     }
 
     public override void _EnterTree()
@@ -272,8 +277,9 @@ public partial class PipeContext : Node
         EditorInterface.Singleton.SaveScene();
     }
 
-    protected override void Dispose(bool disposing)
+    public override void _ExitTree()
     {
+        GD.Print("PipeContext Exit tree!");
         if (OS.HasFeature("editor_runtime"))
         {
             return;
@@ -286,8 +292,6 @@ public partial class PipeContext : Node
         {
             pipe.DisposePipe();
         }
-
-        base.Dispose(disposing);
     }
 
 }

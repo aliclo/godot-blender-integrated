@@ -229,6 +229,12 @@ public partial class SetPropertyNode : PipelineNode
         destinationHelper.RemoveReceivePipes(receivePipes);
     }
 
+    public override void _ExitTree()
+    {
+        _propertyOptions.ItemSelected -= PropertySelected;
+        _valueEdit.TextChanged -= PropValueChanged;
+    }
+
     public override void DisposePipe()
     {
         // Nothing to dispose

@@ -1,4 +1,3 @@
-using System;
 using Godot;
 
 public partial class NumericLineEdit : LineEdit
@@ -97,12 +96,11 @@ public partial class NumericLineEdit : LineEdit
 		}
 	}
 
-    protected override void Dispose(bool disposing)
-	{
-		TextChanged -= OnTextChanged;
-		FocusExited -= OnFocusExited;
-		base.Dispose(disposing);
-	}
+    public override void _ExitTree()
+    {
+        TextChanged -= OnTextChanged;
+        FocusExited -= OnFocusExited;
+    }
 
 
 

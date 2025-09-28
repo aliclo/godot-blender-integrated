@@ -483,7 +483,8 @@ public partial class EdgifyNode : PipelineNode
         container.AddChild(label);
 
         var lineEdit = new NumericLineEdit();
-        lineEdit.SizeFlagsHorizontal = SizeFlags.ExpandFill; lineEdit.Text = "";
+        lineEdit.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        lineEdit.Text = "";
         lineEdit.NumberChanged += ThicknessXChanged;
         container.AddChild(lineEdit);
 
@@ -597,6 +598,18 @@ public partial class EdgifyNode : PipelineNode
 
         return lineEdit;
     }
+
+    public override void _ExitTree()
+    {
+        _thicknessXLineEdit.NumberChanged -= ThicknessXChanged;
+        _thicknessYLineEdit.NumberChanged -= ThicknessYChanged;
+        _sharpnessThresholdLineEdit.NumberChanged -= SharpnessThresholdChanged;
+        _minYAngleLineEdit.NumberChanged -= MinYAngleChanged;
+        _maxYAngleLineEdit.NumberChanged -= MaxYAngleChanged;
+        _minYLineEdit.NumberChanged -= MinYChanged;
+        _maxYLineEdit.NumberChanged -= MaxYChanged;
+    }
+
 
     public override void DisposePipe()
     {

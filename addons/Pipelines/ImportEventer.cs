@@ -6,6 +6,7 @@ public partial class ImportEventer : EditorScenePostImportPlugin
 
     public static ImportEventer Instance { get; private set; }
 
+    private Timer _timer;
     private string _filePath;
 
     [Signal]
@@ -16,6 +17,8 @@ public partial class ImportEventer : EditorScenePostImportPlugin
     {
         _pipelines = pipelines;
         Instance = this;
+        _timer = new Timer();
+        _timer.OneShot = true;
     }
 
     public override void _GetImportOptions(string path)
@@ -27,19 +30,27 @@ public partial class ImportEventer : EditorScenePostImportPlugin
     public override void _PostProcess(Node scene)
     {
         GD.Print("PostProcess");
-        var sceneFilePath = _filePath;
 
-        var gdTimer = new Timer();
-        gdTimer.OneShot = true;
-        gdTimer.Timeout += () => RaiseSceneImportUpdated(sceneFilePath);
-        _pipelines.AddChild(gdTimer);
-        gdTimer.Start(1);
+        // Warning: If an import is done too close to another, then this will not catch the others until the first one is completed after the delay
+        // This means that when another is done that would need more time, not enough time will be given
+        if (_timer != null)
+        {
+            GD.Print("WARNING: Already handling import request so won't send another");
+        }
+        else
+        {
+            _timer.Timeout += RaiseSceneImportUpdated;
+            _pipelines.AddChild(_timer);
+            _timer.Start(1);
+        }
     }
 
-    private void RaiseSceneImportUpdated(string filePath)
+    private void RaiseSceneImportUpdated()
     {
+        _timer.Timeout -= RaiseSceneImportUpdated;
         GD.Print("RaiseSceneImportUpdated");
-        EmitSignal(SignalName.SceneImportUpdated, filePath);
+        EmitSignal(SignalName.SceneImportUpdated, _filePath);
+        _pipelines.RemoveChild(_timer);
     }
 
 }

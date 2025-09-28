@@ -60,9 +60,9 @@ public partial class SceneModelNode : PipelineNode
     private EditorResourcePicker _sceneModelPicker;
     private SceneModelNodeStore _sceneModelNodeStore;
 
-    private Array<PipelineNode> _meshPipes = new Array<PipelineNode>();
-    private Array<PipelineNode> _collisionShapePipes = new Array<PipelineNode>();
-    private Array<PipelineNode> _animationPlayerPipes = new Array<PipelineNode>();
+    private Array<PipelineNode> _meshPipes;
+    private Array<PipelineNode> _collisionShapePipes;
+    private Array<PipelineNode> _animationPlayerPipes;
     private ICloneablePipeValue _meshCloneablePipeValue;
     private ICloneablePipeValue _collisionShapeCloneablePipeValue;
     private ICloneablePipeValue _animationPlayerCloneablePipeValue;
@@ -77,6 +77,7 @@ public partial class SceneModelNode : PipelineNode
     public SceneModelNode()
     {
         GD.Print("Creating new SceneModelNode!!");
+        ImportEventer.Instance.SceneImportUpdated += SceneUpdated;
     }
 
     public override void AddConnection(int index, Array<PipelineNode> receivePipes)
@@ -238,6 +239,10 @@ public partial class SceneModelNode : PipelineNode
     {
         _context = context;
 
+        _meshPipes = new Array<PipelineNode>();
+        _collisionShapePipes = new Array<PipelineNode>();
+        _animationPlayerPipes = new Array<PipelineNode>();
+
         _nodeConnections = new Array<Array<PipelineNode>>(Enumerable.Range(0, 3)
             .Select(n => new Array<PipelineNode>()));
 
@@ -265,7 +270,6 @@ public partial class SceneModelNode : PipelineNode
         _sceneModelPicker = new EditorResourcePicker();
         _sceneModelPicker.BaseType = nameof(PackedScene);
         _sceneModelPicker.ResourceChanged += SceneChanged;
-        ImportEventer.Instance.SceneImportUpdated += SceneUpdated;
         AddChild(_sceneModelPicker);
 
         if (_sceneModelNodeStore != null)
@@ -458,13 +462,20 @@ public partial class SceneModelNode : PipelineNode
     public override void DisposePipe()
     {
         GD.Print("Disposing Pipe SceneModelNode!");
-        ImportEventer.Instance.SceneImportUpdated -= SceneUpdated;
     }
+
+    public override void _ExitTree()
+    {
+        GD.Print("SceneModelNode exit tree!");
+        _sceneModelPicker.ResourceChanged -= SceneChanged;
+    }
+
 
     protected override void Dispose(bool disposing)
     {
-        base.Dispose(disposing);
         GD.Print("Disposing SceneModelNode!");
+        ImportEventer.Instance.SceneImportUpdated -= SceneUpdated;
+        base.Dispose(disposing);
     }
 
     public override ICloneablePipeValue PipeValue(ICloneablePipeValue pipeValue)

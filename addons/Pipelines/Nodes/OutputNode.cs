@@ -1,5 +1,4 @@
 #if TOOLS
-using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using Godot.Collections;
@@ -27,15 +26,18 @@ public partial class OutputNode : PipelineNode
     private string _nodeName;
     private Node _node;
     private Node _previousNode;
-    private Array<NodePath> _nodeDependencies = new Array<NodePath>();
+    private Array<NodePath> _nodeDependencies;
 
     public override Array<PipelineNode> NextPipes => [];
 
 
-    public NodePath AbsoluteDestination { 
-        get {
+    public NodePath AbsoluteDestination
+    {
+        get
+        {
             var destinationNode = _context.RootNode.GetNodeOrNull(_destination);
-            if(destinationNode == null) {
+            if (destinationNode == null)
+            {
                 return null;
             }
 
@@ -44,10 +46,13 @@ public partial class OutputNode : PipelineNode
         }
     }
 
-    public NodePath AbsoluteDestinationIncludingNode {
-        get {
+    public NodePath AbsoluteDestinationIncludingNode
+    {
+        get
+        {
             var absoluteDestination = AbsoluteDestination;
-            if(absoluteDestination == null) {
+            if (absoluteDestination == null)
+            {
                 return null;
             }
 
@@ -76,6 +81,8 @@ public partial class OutputNode : PipelineNode
     public override void Init(PipeContext context)
     {
         _context = context;
+
+        _nodeDependencies = new Array<NodePath>();
 
         SetSlotEnabledLeft(0, true);
         SetSlotTypeLeft(0, (int)PipelineNodeTypes.Any);
@@ -197,7 +204,7 @@ public partial class OutputNode : PipelineNode
     {
         EditorInterface.Singleton.PopupNodeSelector(Callable.From<NodePath>(OutputNodePathChanged));
     }
-    
+
     private void OutputNodeRenamed()
     {
         NodeNameChanged(_node.Name);
@@ -209,7 +216,7 @@ public partial class OutputNode : PipelineNode
         {
             _nodeNameEditor.Text = nodeName;
         }
-        
+
         if (string.IsNullOrWhiteSpace(nodeName))
         {
             _nodeName = "Unnamed-Node";
@@ -264,6 +271,19 @@ public partial class OutputNode : PipelineNode
     public override void DisposePipe()
     {
         // Nothing to dispose
+        GD.Print("Disposed OutputNode!");
     }
+
+    public override void _ExitTree()
+    {
+        GD.Print("Exiting tree for OutputNode!");
+        _outputNodePicker.Pressed -= OutputNodePickerPressed;
+        _nodeNameEditor.TextChanged -= NodeNameChanged;
+        if (_node != null)
+        {
+            _node.Renamed -= OutputNodeRenamed;
+        }
+    }
+
 }
 #endif
