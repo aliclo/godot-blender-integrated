@@ -51,7 +51,7 @@ public partial class OutputNode : PipelineNode
         get
         {
             var absoluteDestination = AbsoluteDestination;
-            if (absoluteDestination == null)
+            if (absoluteDestination == null || string.IsNullOrWhiteSpace(_nodeName))
             {
                 return null;
             }
@@ -121,13 +121,16 @@ public partial class OutputNode : PipelineNode
             _nodeDependencies.Add(AbsoluteDestination);
         }
 
-        var node = _context.RootNode.GetNodeOrNull(_destination + "/" + _nodeName);
-
-        if (node != null)
+        if (!string.IsNullOrWhiteSpace(_nodeName))
         {
-            _node = node;
-            _node.Renamed += OutputNodeRenamed;
-            _previousNode = _node.Duplicate();
+            var node = _context.RootNode.GetNodeOrNull(_destination + "/" + _nodeName);
+
+            if (node != null)
+            {
+                _node = node;
+                _node.Renamed += OutputNodeRenamed;
+                _previousNode = _node.Duplicate();
+            }
         }
     }
 

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+#if TOOLS
 using Godot;
 using Godot.Collections;
 
@@ -9,3 +9,4 @@ public partial class NodePipes : Node
     public Array<PipelineNode> Pipes { get; set; }
     public int CurrentProgress { get; set; } = 0;
 }
+#endif

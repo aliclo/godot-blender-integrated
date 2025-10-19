@@ -30,7 +30,7 @@ public partial class PipeContext : Node
         _pipeMapper = new PipeMapper();
         _pipelineNodeDict = new Godot.Collections.Dictionary<string, PipelineNode>();
 
-        Pipelines.Instance.RegisterContext(this);
+        PipelinesSingleton.Singleton(s => s.RegisterContext(this));
 
         var sceneFilePath = GetTree().EditedSceneRoot.SceneFilePath;
         var pipelineContextStores = _pipelineAccess.Read(sceneFilePath);
@@ -285,7 +285,7 @@ public partial class PipeContext : Node
             return;
         }
 
-        Pipelines.Instance.UnregisterContext(this);
+        PipelinesSingleton.Singleton(s => s.UnregisterContext(this));
     }
 
 }

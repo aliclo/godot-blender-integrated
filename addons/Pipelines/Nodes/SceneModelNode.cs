@@ -73,11 +73,11 @@ public partial class SceneModelNode : PipelineNode
 
     public override Array<PipelineNode> NextPipes => [];
 
-
-    public SceneModelNode()
+    public override void _Ready()
     {
-        ImportEventer.Instance.SceneImportUpdated += SceneUpdated;
+        PipelinesSingleton.Singleton(s => { GD.Print("Executing signal registration for SceneModelNode!"); s.SceneImportUpdated += SceneUpdated; });
     }
+
 
     public override void AddConnection(int index, Array<PipelineNode> receivePipes)
     {
@@ -466,7 +466,7 @@ public partial class SceneModelNode : PipelineNode
 
     protected override void Dispose(bool disposing)
     {
-        ImportEventer.Instance.SceneImportUpdated -= SceneUpdated;
+        PipelinesSingleton.Singleton(s => s.SceneImportUpdated -= SceneUpdated);
         base.Dispose(disposing);
     }
 

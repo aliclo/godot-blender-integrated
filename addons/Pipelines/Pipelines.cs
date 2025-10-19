@@ -11,71 +11,41 @@ public partial class Pipelines : EditorPlugin
 
 	private const string ADDON_PATH = "res://addons/Pipelines";
 
-	public static Pipelines Instance;
-
 	private PipelineEditor _pipelineEditor;
 	private PipeContext _activeContext;
 	private EditorSelection _selection;
-	private PipelineAccess _pipelineAccess = new PipelineAccess();
+    private PipelineAccess _pipelineAccess = new PipelineAccess();
 	private ImportEventer _importEventer;
-	private Array<PipeContext> _pipeContexts;
-
-    public Pipelines()
-    {
-        Instance = this;
-
-        _importEventer = new ImportEventer();
-        _importEventer.Init(this);
-    }
 
 	public override void _EnterTree()
     {
         // Initialization of the plugin goes here.
-        _pipeContexts = new Array<PipeContext>();
-        _importEventer.SceneImportUpdated += SavePipelineScenes;
+        AddAutoloadSingleton("PipelinesSingleton", $"{ADDON_PATH}/{nameof(PipelinesSingleton)}.tscn");
+        _importEventer = new ImportEventer();
         var pipeContextScript = GD.Load<CSharpScript>($"{ADDON_PATH}/{nameof(PipeContext)}.cs");
         var pipeContextIcon = GD.Load<Texture2D>($"{ADDON_PATH}/{nameof(PipeContext)}.png");
         AddCustomType(nameof(PipeContext), nameof(Node), pipeContextScript, pipeContextIcon);
         AddScenePostImportPlugin(_importEventer);
+        PipelinesSingleton.Singleton(s => s.SceneImportUpdated += SavePipelineScenes);
         _selection = EditorInterface.Singleton.GetSelection();
         _selection.SelectionChanged += OnSelectionChanged;
-        SceneSaved += OnSave;
+        PipelinesSingleton.Singleton(s => SceneSaved += s.OnSave);
     }
 
-	public override void _ExitTree()
-	{
-		// Clean-up of the plugin goes here.
-		// TODO: Clear save history at this point
-		Instance = null;
-		_importEventer.SceneImportUpdated -= SavePipelineScenes;
-		RemoveScenePostImportPlugin(_importEventer);
-		RemoveCustomType(nameof(PipeContext));
-		SceneSaved -= OnSave;
-		_selection.SelectionChanged -= OnSelectionChanged;
-		if (_pipelineEditor != null)
-		{
-			ClearContextAndPipelineGraph();
-		}
-	}
-
-	public void RegisterContext(PipeContext context)
-	{
-		_pipeContexts.Add(context);
-	}
-
-	public void UnregisterContext(PipeContext context)
-	{
-		_pipeContexts.Remove(context);
-	}
-
-	private void OnSave(string filePath)
-	{
-        GD.Print("Pipeline editor: ", _pipelineEditor);
-		var filePipeContexts = _pipeContexts.Where(c => c.Owner.SceneFilePath == filePath);
-		foreach (var context in filePipeContexts)
-		{
-			_pipelineAccess.Write(context.Owner.SceneFilePath, context);
-		}
+    public override void _ExitTree()
+    {
+        // Clean-up of the plugin goes here.
+        // TODO: Clear save history at this point
+        PipelinesSingleton.Singleton(s => s.SceneImportUpdated -= SavePipelineScenes);
+        RemoveScenePostImportPlugin(_importEventer);
+        RemoveCustomType(nameof(PipeContext));
+        PipelinesSingleton.Singleton(s => SceneSaved -= s.OnSave);
+        _selection.SelectionChanged -= OnSelectionChanged;
+        if (_pipelineEditor != null)
+        {
+            ClearContextAndPipelineGraph();
+        }
+        RemoveAutoloadSingleton("PipelinesSingleton");
 	}
 
 	private void OnSelectionChanged()
@@ -122,6 +92,7 @@ public partial class Pipelines : EditorPlugin
 
 	private void SavePipelineScenes(string fileName)
 	{
+        GD.Print("Saving scene! ", fileName);
 		var openedScenes = EditorInterface.Singleton.GetOpenScenes();
 
 		var pipeFiles = FindFilesEndingWith("res://", ".pipelines.json");

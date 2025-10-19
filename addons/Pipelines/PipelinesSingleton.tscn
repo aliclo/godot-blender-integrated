@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://ds7pf5i4x0cgl"]
+
+[ext_resource type="Script" uid="uid://byiggss33q7p2" path="res://addons/Pipelines/PipelinesSingleton.cs" id="1_xd3k0"]
+
+[node name="PipelinesSingleton" type="Node"]
+script = ExtResource("1_xd3k0")
