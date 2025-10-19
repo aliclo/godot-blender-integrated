@@ -13,7 +13,6 @@ public partial class ImportEventer : EditorScenePostImportPlugin
 
     public override void _PostProcess(Node scene)
     {
-        GD.Print("Post process: ", scene.Name);
         PipelinesSingleton.Singleton(s => s.EmitSignal(PipelinesSingleton.SignalName.SceneImportPostProcess, _filePath));
     }
 

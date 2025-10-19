@@ -38,8 +38,6 @@ public partial class PipelinesSingleton : Node
         _instance = this;
         SceneImportPostProcess += OnSceneImportPostProcess;
 
-        GD.Print("Ready with ", _pipelinesSingletonActions.Count, " actions");
-
         foreach (var action in _pipelinesSingletonActions)
         {
             action(_instance);

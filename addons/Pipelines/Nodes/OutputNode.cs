@@ -273,7 +273,6 @@ public partial class OutputNode : PipelineNode
 
     public override void _ExitTree()
     {
-        GD.Print("Exiting tree for OutputNode!");
         _outputNodePicker.Pressed -= OutputNodePickerPressed;
         _nodeNameEditor.TextChanged -= NodeNameChanged;
         if (_node != null)

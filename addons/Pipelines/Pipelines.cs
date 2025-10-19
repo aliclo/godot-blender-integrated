@@ -55,8 +55,6 @@ public partial class Pipelines : EditorPlugin
 
 		if (pipelineContext != null)
 		{
-            GD.Print("Pipelines loading pipeline context: ", pipelineContext);
-            GD.Print("Output nodes: ", pipelineContext.OutputNodes);
 			if (_pipelineEditor != null)
             {
                 ClearContextAndPipelineGraph();
@@ -83,7 +81,6 @@ public partial class Pipelines : EditorPlugin
 		_activeContext.TreeExiting -= ClearContextAndPipelineGraph;
 		_pipelineAccess.Write(_activeContext.Owner.SceneFilePath, _activeContext);
 		_pipelineEditor.PipelineGraph.Cleanup();
-        GD.Print("Removing pipeline editor: ", _pipelineEditor);
 		RemoveControlFromBottomPanel(_pipelineEditor);
 		_pipelineEditor.QueueFree();
 		_pipelineEditor = null;
