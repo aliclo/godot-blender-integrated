@@ -1,10 +1,10 @@
-#if TOOLS
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using Godot.Collections;
 
+#if TOOLS
 [Tool]
 public partial class PipelinesSingleton : Node
 {
@@ -68,7 +68,8 @@ public partial class PipelinesSingleton : Node
     {
         var timer = new Timer();
         timer.OneShot = true;
-        timer.Timeout += () => {
+        timer.Timeout += () =>
+        {
             EmitSignal(SignalName.SceneImportUpdated, filePath);
             RemoveChild(timer);
             timer.QueueFree();
@@ -76,6 +77,11 @@ public partial class PipelinesSingleton : Node
         AddChild(timer);
         timer.Start(1);
     }
+
+}
+#else
+public partial class PipelinesSingleton : Node
+{
 
 }
 #endif
