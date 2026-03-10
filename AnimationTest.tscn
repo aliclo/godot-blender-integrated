@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=4 uid="uid://cdu4ca0yav4lq"]
+[gd_scene format=4 uid="uid://cdu4ca0yav4lq"]
 
 [ext_resource type="Script" uid="uid://b5jmldk0tlx5g" path="res://addons/Pipelines/PipeContext.cs" id="1_ysdcj"]
 
@@ -75,32 +75,30 @@ _data = {
 &"Cube-colAction": SubResource("Animation_ar2y3")
 }
 
-[node name="AnimationTest" type="Node3D"]
+[node name="AnimationTest" type="Node3D" unique_id=396893554]
 
-[node name="PipeContext" type="Node" parent="."]
+[node name="PipeContext" type="Node" parent="." unique_id=1757486114]
 script = ExtResource("1_ysdcj")
 metadata/_custom_type_script = "uid://b5jmldk0tlx5g"
 
-[node name="AnimatableBody3D" type="AnimatableBody3D" parent="."]
+[node name="AnimatableBody3D" type="AnimatableBody3D" parent="." unique_id=1538240198]
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="AnimatableBody3D"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="AnimatableBody3D" unique_id=134132772]
 mesh = SubResource("ArrayMesh_v8nme")
 skeleton = NodePath("")
 
-[node name="MeshInstance3D-Edges" type="MeshInstance3D" parent="AnimatableBody3D"]
+[node name="MeshInstance3D-Edges" type="MeshInstance3D" parent="AnimatableBody3D" unique_id=1877567530]
 mesh = SubResource("ArrayMesh_ysdcj")
 
-[node name="CSGSphere3D" type="CSGSphere3D" parent="."]
+[node name="CSGSphere3D" type="CSGSphere3D" parent="." unique_id=1757944220]
 
-[node name="Camera3D" type="Camera3D" parent="."]
+[node name="Camera3D" type="Camera3D" parent="." unique_id=2098992402]
 transform = Transform3D(1, 0, 0, 0, 0.856898, 0.515487, 0, -0.515487, 0.856898, -9.30932, 10.7961, 13.2041)
 current = true
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=829136122]
 transform = Transform3D(0.160468, 0.675526, -0.719663, -0.147016, 0.737336, 0.659334, 0.976031, 0, 0.217632, 0, 8.50784, 0)
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-libraries = {
-&"": SubResource("AnimationLibrary_tj1ln")
-}
-autoplay = "Cube-colAction"
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=907716830]
+libraries/ = SubResource("AnimationLibrary_tj1ln")
+autoplay = &"Cube-colAction"
